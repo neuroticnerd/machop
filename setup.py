@@ -29,7 +29,7 @@ def fread(filename, split=False, keepnl=False):
 PROJECT   = "machop"
 AUTHOR    = "Bryce Eggleton"
 EMAIL     = "None"
-DESC      = "Automation, CI, and filewatching tools"
+DESC      = "Automation, CI, and filewatching tools for Python projects"
 LONG_DESC = fread('README.rst')
 LICENSE   = "BSD License"
 KEYWORDS  = "automation flake8 py.test watch"
