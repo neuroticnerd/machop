@@ -4,8 +4,7 @@
 # ===============================================
 import os
 
-from setuptools import setup, find_packages
-from machop.version import __version__ as VERSION
+from setuptools import setup
 
 
 def fread(filename, split=False, keepnl=False):
@@ -38,8 +37,8 @@ LICENSE   = "BSD License"
 KEYWORDS  = "automation flake8 py.test watch"
 URL       = "http://packages.python.org/machop"
 REQUIRES  = fread('requirements.txt', True)
-
-# https://pypi.python.org/pypi?%3Aaction=list_classifiers
+# @@@ write function to read version from file
+VERSION   = "0.1.0"
 TAGS      = [
                 "Development Status :: 2 - Pre-Alpha",
                 "Topic :: Utilities",
@@ -48,6 +47,7 @@ TAGS      = [
                 "Intended Audience :: Developers",
                 "Programming Language :: Python :: 2.7",
             ]
+# https://pypi.python.org/pypi?%3Aaction=list_classifiers
 
 
 setup(
@@ -59,9 +59,12 @@ setup(
     license = LICENSE,
     keywords = KEYWORDS,
     url = URL,
-    packages = find_packages(),
+    packages = ['machop'],
     long_description = LONG_DESC,
     install_requires = REQUIRES,
     classifiers = TAGS,
+    entry_points = {
+        "console_scripts": ['machop = machop.__main__:main'],
+    },
 )
 

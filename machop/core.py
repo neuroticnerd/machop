@@ -13,15 +13,15 @@ MACHOP_COMMANDS = {}
 CURRENT_DIRECTORY = os.getcwd()
 
 
-def default(defaultcommands):
-    command('focus-energy', defaultcommands)
-
-
 def command(cmdstring, cmdfunction):
-    # @@@ TODO: validate command names before adding
+    # @@@ TODO: validate command names before adding!
     if not isinstance(cmdfunction, (list, tuple)):
         cmdfunction = [cmdfunction]
     MACHOP_COMMANDS[cmdstring] = cmdfunction
+
+
+def default(defaultcommands):
+    command('focus-energy', defaultcommands)
 
 
 def run(command, *args, **kwargs):
@@ -49,7 +49,7 @@ def run(command, *args, **kwargs):
         result = action(*args, **kwargs)
         if result:
             pass
-    # @@@ raise exceptions for error results?
+    # @@@ raise exceptions or log for error results?
 
 
 def watch(globpatterns, commandchain):
@@ -96,5 +96,5 @@ def watch(globpatterns, commandchain):
 def leer(*args, **kwargs):
     pass
 
-# make sure there's a default command in there
+# make sure there's a default command available regardless
 default(leer)
