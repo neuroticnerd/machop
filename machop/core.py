@@ -54,8 +54,10 @@ def run(command, *args, **kwargs):
 
 def watch(globpatterns, commandchain):
     """
-    @@@ this NEEDS to be done using subprocess as an asynchronous task
+    @@@ this NEEDS to be done using subprocess for an asynchronous task
     """
+    def announce():
+        print "\nnow watching %s..." % globpatterns
 
     class MachopHandler(PatternMatchingEventHandler):
         """ watcher for a file system event """
@@ -66,6 +68,7 @@ def watch(globpatterns, commandchain):
             if WATCH_MAP.get(source, None):
                 for action in WATCH_MAP[source]:
                     run(action, cmdpath=source)
+                announce()
 
     if not isinstance(commandchain, (list, tuple)):
         commandchain = [commandchain]
@@ -81,7 +84,7 @@ def watch(globpatterns, commandchain):
     observer = Observer()
     observer.schedule(handler, CURRENT_DIRECTORY, recursive=True)
     observer.start()
-    print "now watching %s...\n" % globpatterns
+    announce()
     try:
         while True:
             time.sleep(1)

@@ -19,7 +19,7 @@ def fread(filename, split=False, keepnl=False):
         for line in f:
             if line == '\n':
                 continue
-            if split:
+            if split and not '#' in line:
                 result.append(line.replace('\n', ''))
             else:
                 result += line

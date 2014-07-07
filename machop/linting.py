@@ -1,6 +1,7 @@
 
 from subprocess import call
 
+
 def flake(pythonfiles):
     """
     pythonfiles can be a directory, file, or list/tuple of files
@@ -11,5 +12,10 @@ def flake(pythonfiles):
         fileset = pythonfiles
     else:
         fileset = [pythonfiles]
+    error = False
     for f in fileset:
-        call(['flake8', f], shell=True)
+        result = call(['flake8', f], shell=True)
+        if result != 0:
+            error = True
+    if not error:
+        print "machop: python linting passed"
