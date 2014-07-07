@@ -5,7 +5,7 @@
 import os
 
 from setuptools import setup, find_packages
-from machop import __version__ as VERSION
+from machop.version import __version__ as VERSION
 
 
 def fread(filename, split=False, keepnl=False):
