@@ -5,7 +5,7 @@
 import os
 
 from setuptools import setup, find_packages
-from machop import VERSION
+from machop import __version__ as VERSION
 
 
 def fread(filename, split=False, keepnl=False):
@@ -17,9 +17,12 @@ def fread(filename, split=False, keepnl=False):
         result = []
     with open(filename) as f:
         for line in f:
+            tmpline = line
             if line == '\n':
                 continue
-            if split and not '#' in line:
+            if split:
+                if '#' in tmpline.strip()[:2]:
+                    continue
                 result.append(line.replace('\n', ''))
             else:
                 result += line

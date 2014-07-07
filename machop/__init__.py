@@ -29,9 +29,8 @@ integrate flake8 and pytest/coverage into machop core
 ############################################
 # version is listed here so that it will
 # be available to any code which imports it
-VERSION = "0.1.0"
-version = VERSION
+__version__ = "0.1.0"
 ############################################
 
-# from core import default, command, run, watch
-# from linting import flake
+from core import default, command, run, watch
+from linting import flake
