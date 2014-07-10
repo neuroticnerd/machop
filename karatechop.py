@@ -22,20 +22,9 @@ def python_lint(cmdpath, **kwargs):
     machop.flake(cmdpath)
 
 
-def python_test(**kwargs):
-    print "this is the python testing command"
-
-
-def python_cov(**kwargs):
-    print "this is the python coverage command"
-
-
 def focus_energy(**kwargs):
-    machop.watch(['*.py', '*/*.py'], ['flake'])  # , 'pytest', 'coverage'])
+    machop.watch(['*.py', '*/*.py'], ['flake'])
 
 machop.command('flake', python_lint)
-machop.command('pytest', python_test)
-machop.command('coverage', python_cov)
-machop.command('pycheck', ['flake', 'pytest', 'coverage'])
 machop.command('watch', focus_energy)
-machop.default('watch')
+machop.default(focus_energy)

@@ -34,4 +34,5 @@ def main():
     else:
         # @@@ TODO use argparse to config params to commands
         machop.run('focus-energy', cmdpath=CWD)
+    machop.api._wait() 
     raise SystemExit(exit_code > 0)
