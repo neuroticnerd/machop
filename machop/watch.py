@@ -1,8 +1,12 @@
 
 import time
 import fnmatch
+import hashlib
+import colorama
 
 from .async import MachopAsyncCommand
+from .strings import txt_machop
+
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
@@ -17,9 +21,8 @@ class MachopWatchCommand(MachopAsyncCommand):
             source = event.src_path
             self._watcher.modified(source)
 
-    def __init__(self, globs=None, cmds=None, path=None, runner=None):
+    def __init__(self, globs=None, cmds=None, path=None):
         self.config(globs, cmds, path)
-        self.run_command = runner
         super(MachopWatchCommand, self).__init__()
 
     def config(self, patterns, commands, watchpath):
@@ -27,22 +30,31 @@ class MachopWatchCommand(MachopAsyncCommand):
         self.actions = commands if commands else []
         self.watchpath = watchpath
         self.watching = True
+        self.hashmap = {}
 
     def modified(self, eventsrc):
-        match = False
+        if not self.has_changed(eventsrc):
+            return
         for pattern in self.globs:
             if fnmatch.fnmatch(eventsrc, pattern):
-                match = True
-        if not match:
-            return
-        for action in self.actions:
-            self.run_command(action, cmdpath=eventsrc)
+                for action in self.actions:
+                    action(cmdpath=eventsrc)
+                break
         self.announce()
 
     def announce(self):
-        print "\nnow watching %s..." % self.globs
+        msg = "\n" + txt_machop + ":" + colorama.Fore.BLUE
+        msg += colorama.Style.BRIGHT + "watch"
+        msg += colorama.Style.RESET_ALL + ":(" + colorama.Fore.YELLOW
+        msg += self.watchpath + colorama.Style.RESET_ALL + ")"
+        for match in self.globs:
+            msg += "[" + colorama.Fore.YELLOW + match
+            msg += colorama.Style.RESET_ALL + "]"
+        msg += colorama.Style.RESET_ALL + "..."
+        print msg
 
     def run(self):
+        colorama.init()
         handler = self.MachopHandler(patterns=self.globs)
         handler._watcher = self
         self.observer = Observer()
@@ -59,3 +71,13 @@ class MachopWatchCommand(MachopAsyncCommand):
 
     def shutdown(self):
         self.wait = False
+
+    def has_changed(self, key):
+        hasher = hashlib.md5()
+        with open(key, 'rb') as modfile:
+            hasher.update(modfile.read())
+        xhash = hasher.hexdigest()
+        if self.hashmap.get(key, "") != xhash:
+            self.hashmap[key] = xhash
+            return True
+        return False

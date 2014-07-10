@@ -17,5 +17,7 @@ def flake(pythonfiles):
         result = call(['flake8', f], shell=True)
         if result != 0:
             error = True
+        else:
+            print "%s: <no flake8 errors!>" % f
     if not error:
-        print "machop: python linting passed"
+        pass

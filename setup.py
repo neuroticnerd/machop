@@ -37,8 +37,10 @@ LICENSE   = "BSD License"
 KEYWORDS  = "automation flake8 py.test watch"
 URL       = "http://packages.python.org/machop"
 REQUIRES  = fread('requirements.txt', True)
-# @@@ write function to read version from file
+
+# @@@ write function to read version from version.py or __init__.py file
 VERSION   = "0.1.0"
+
 TAGS      = [
                 "Development Status :: 2 - Pre-Alpha",
                 "Topic :: Utilities",

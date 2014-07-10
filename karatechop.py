@@ -15,16 +15,17 @@ reference in the function definition:
             by default this is the current working directory, but for watch
             events it is the file or directory which triggered the change.
 """
-import machop 
+import machop
 
 
 def python_lint(cmdpath, **kwargs):
     machop.flake(cmdpath)
 
 
-def focus_energy(**kwargs):
-    machop.watch(['*.py', '*/*.py'], ['flake'])
+def foresight(**kwargs):
+    machop.watch('*.py', ['flake'])
+    machop.watch('*/*.py', ['flake'])
 
 machop.command('flake', python_lint)
-machop.command('watch', focus_energy)
-machop.default(focus_energy)
+machop.command('watch', foresight)
+machop.default('watch')

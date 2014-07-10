@@ -1,36 +1,54 @@
 
 import os
-import glob
-import time
 
 from .core import iscallable, ensure_list
 from .async import MachopAsyncCommand
 from .watch import MachopWatchCommand
+from .strings import invalid_command
+
+
+def _leer(*args, **kwargs):
+    print "no default command has been set!"
+
+
+def machop_init(*args, **kwargs):
+    print "this will initialize a karatechop.py file in cwd"
+
 
 CURRENT_DIRECTORY = os.getcwd()
 __join_list__ = []
-__move_list__ = {}
+__move_list__ = {'focus-energy': _leer, 'init': machop_init}
 
 
-def command(cmdstring, cmdfunction):
-    # @@@ TODO: validate command names before adding!
-    if not isinstance(cmdfunction, (list, tuple)):
-        cmdfunction = [cmdfunction]
-    __move_list__[cmdstring] = cmdfunction
+def _get_callables(cmdlist):
+    commands = []
+    for cmd in cmdlist:
+        if not iscallable(cmd):
+            entry = __move_list__.get(cmd, None)
+            if not entry:
+                raise KeyError("command %s not found" % cmd)
+            commands.extend(_get_callables(ensure_list(entry)))
+        else:
+            commands.append(cmd)
+    return commands
 
 
 def default(defaultcommands):
     command('focus-energy', defaultcommands)
 
 
+def command(cmdstring, cmdfunction):
+    # @@@ TODO: validate command names before adding!
+    cmdfunction = ensure_list(cmdfunction)
+    __move_list__[cmdstring] = cmdfunction
+
+
 def run(command, *args, **kwargs):
     if not __move_list__.get(command, None):
-        print "%s is not a registered command!" % command
+        print invalid_command(command, __move_list__.keys())
         return
-    actions = __move_list__[command]
+    actions = ensure_list(__move_list__[command])
     cmdpath = None
-    if not isinstance(actions, (list, tuple)):
-        actions = [actions]
     # @@@ determine if the action is a callable, or another command to run
     if 'cmdpath' not in kwargs.keys():
         cmdpath = CURRENT_DIRECTORY
@@ -67,8 +85,9 @@ def async(commands, shell=False):
 def watch(globpatterns, commandchain):
     commands = ensure_list(commandchain)
     globs = ensure_list(globpatterns)
+    commands = _get_callables(commands)
     # @@@ get actual command objects or ensure string list
-    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY, run)
+    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
     watchman.start()
     __join_list__.append(watchman)
 
@@ -88,11 +107,3 @@ def _wait():
             strand.shutdown()
             strand.join(2)
             strand.terminate()
-        print "machop fainted!"
-
-
-def _leer(*args, **kwargs):
-    print "no default command has been set!"
-
-# make sure there's a default command available regardless
-default(_leer)

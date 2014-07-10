@@ -2,7 +2,8 @@
 @@@ make command structures into classes
 @@@ support command chain order dependencies
 @@@ concurrency for multiple async commands
-@@@ proper error handling for commands
+@@@ alternative way of defining built-in commands
+@@@ proper error + exception handling for commands and processes
 @@@ use logging module instead of print
 @@@ colored console output
 @@@ integrate flake8 and pytest/coverage into machop core
@@ -28,6 +29,6 @@ machop.alias (associate command with series of commands)
 
 https://bitbucket.org/schettino72/doit/src/a55aa33b6807?at=default
 """
-from version import __version__
-from api import default, command, run, async, watch
-from linting import flake
+from .version import __version__
+from .api import default, command, run, async, watch
+from .linting import flake
