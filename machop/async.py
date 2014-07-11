@@ -2,6 +2,7 @@
 import multiprocessing
 from .commands import MachopCommand
 
+
 class MachopAsyncCommand(MachopCommand, multiprocessing.Process):
 
     def __init__(self, command=None):

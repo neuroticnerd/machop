@@ -1,18 +1,20 @@
 
 import os
 
-from .core import iscallable, ensure_list
+from .utils import MachopLogger, iscallable, ensure_list
 from .async import MachopAsyncCommand
 from .watch import MachopWatchCommand
 from .strings import invalid_command
 
+_log = MachopLogger('api')
+
 
 def _leer(*args, **kwargs):
-    print "no default command has been set!"
+    _log.out("no default command has been set!")
 
 
 def machop_init(*args, **kwargs):
-    print "this will initialize a karatechop.py file in cwd"
+    _log.out("this will initialize a karatechop.py file in cwd")
 
 
 CURRENT_DIRECTORY = os.getcwd()
@@ -45,7 +47,7 @@ def command(cmdstring, cmdfunction):
 
 def run(command, *args, **kwargs):
     if not __move_list__.get(command, None):
-        print invalid_command(command, __move_list__.keys())
+        _log.out(invalid_command(command, __move_list__.keys()))
         return
     actions = ensure_list(__move_list__[command])
     cmdpath = None
@@ -102,7 +104,7 @@ def _wait():
                 strand.cleanup()
                 __join_list__.remove(strand)
     except KeyboardInterrupt:
-        print "shutting down..."
+        _log.out("shutting down...")
         for strand in __join_list__:
             strand.shutdown()
             strand.join(2)

@@ -1,4 +1,5 @@
 """
+@@@ better way to determine correct calls to colorama init()
 @@@ make command structures into classes
 @@@ support command chain order dependencies
 @@@ concurrency for multiple async commands
@@ -12,6 +13,7 @@
 @@@ use argparse in future for better cli arg handling
 @@@ separate logic out of __main__.py into other files, then import
 @@@ 'machop init' command to create a karatechop.py file
+
 
 machop.config
 machop.parameters

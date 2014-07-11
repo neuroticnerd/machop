@@ -24,7 +24,6 @@ def python_lint(cmdpath, **kwargs):
 
 def foresight(**kwargs):
     machop.watch('*.py', ['flake'])
-    machop.watch('*/*.py', ['flake'])
 
 machop.command('flake', python_lint)
 machop.command('watch', foresight)

@@ -2,10 +2,9 @@
 import time
 import fnmatch
 import hashlib
-import colorama
 
 from .async import MachopAsyncCommand
-from .strings import txt_machop
+from .utils import MachopLogger
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -23,6 +22,7 @@ class MachopWatchCommand(MachopAsyncCommand):
 
     def __init__(self, globs=None, cmds=None, path=None):
         self.config(globs, cmds, path)
+        self.log = None
         super(MachopWatchCommand, self).__init__()
 
     def config(self, patterns, commands, watchpath):
@@ -43,18 +43,15 @@ class MachopWatchCommand(MachopAsyncCommand):
         self.announce()
 
     def announce(self):
-        msg = "\n" + txt_machop + ":" + colorama.Fore.BLUE
-        msg += colorama.Style.BRIGHT + "watch"
-        msg += colorama.Style.RESET_ALL + ":(" + colorama.Fore.YELLOW
-        msg += self.watchpath + colorama.Style.RESET_ALL + ")"
+        log = self.log
+        msg = "watching " + log.yellow + self.watchpath + log.reset
         for match in self.globs:
-            msg += "[" + colorama.Fore.YELLOW + match
-            msg += colorama.Style.RESET_ALL + "]"
-        msg += colorama.Style.RESET_ALL + "..."
-        print msg
+            msg += " for [" + log.yellow + match + log.reset + "]"
+        msg += log.reset + "..."
+        log.out(msg)
 
     def run(self):
-        colorama.init()
+        self.log = MachopLogger('watch')
         handler = self.MachopHandler(patterns=self.globs)
         handler._watcher = self
         self.observer = Observer()

@@ -42,7 +42,7 @@ ascii_machop = fore.CYAN + style.BRIGHT + "\
          _.-'         |            `.,--    |    \    \\\n\
     _,.\"\"'\"\"'-._      '      `.     .      j      '    \\\n\
    /            `.___/.-\"    ._`-._  \.    |      |     L\n\
-  /  ____           /,.-'    . `._ '\"\"|`.  `      |     |\n\
+  :  ____           /,.-'    . `._ '\"\"|`.  `      |     |\n\
    `.    `\"-.      / _,-\"     `._ `\"'\".  `. \     '     '\n\
      \       `-   .\"'            \"`---'\   ` `-._/     /\n\
       `-------.   |                     \   `-._      /\n\
@@ -61,7 +61,7 @@ ascii_machop = fore.CYAN + style.BRIGHT + "\
              `-.---\"'             `-..__      _/\n\
                                         `'\"\"\"'" + style.RESET_ALL
 
-txt_startup_msg = "\n      *** use CTRL+C to terminate running commands ***"
+txt_startup_msg = "\n      *** use CTRL+C to terminate running commands ***\n"
 
 txt_config_error = "\nconfig module could not be loaded!\n\
 *** hint: have you run 'machop init' in the current directory?\
