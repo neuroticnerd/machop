@@ -48,6 +48,7 @@ class MachopWatchCommand(MachopAsyncCommand):
         for match in self.globs:
             msg += " for [" + log.yellow + match + log.reset + "]"
         msg += log.reset + "..."
+        log.nl()
         log.out(msg)
 
     def run(self):

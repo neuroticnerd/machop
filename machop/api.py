@@ -1,10 +1,12 @@
 
 import os
+import subprocess as sp
 
 from .utils import MachopLogger, iscallable, ensure_list
 from .async import MachopAsyncCommand
 from .watch import MachopWatchCommand
 from .strings import invalid_command
+
 
 _log = MachopLogger('api')
 
@@ -33,6 +35,11 @@ def _get_callables(cmdlist):
         else:
             commands.append(cmd)
     return commands
+
+
+def getlog(source):
+    newlog = MachopLogger(origin=source)
+    return newlog
 
 
 def default(defaultcommands):
@@ -76,22 +83,35 @@ def async(commands, shell=False):
     commands must be a list of callables or registered commands
     *** if you want async shells use machop.shell([...], async=True)
     """
-    commands = ensure_list(commands)
-    if not iscallable(command):
-        raise TypeError
-    cmdproc = MachopAsyncCommand(commands)
-    cmdproc.start()
-    __join_list__.append(cmdproc)
+    commands = _get_callables(ensure_list(commands))
+    for cmd in commands:
+        cmdproc = MachopAsyncCommand(cmd)
+        cmdproc.start()
+        __join_list__.append(cmdproc)
 
 
 def watch(globpatterns, commandchain):
-    commands = ensure_list(commandchain)
+    """
+    watch accepts glob-style pattern(s) as a list which are then monitored
+    for modifications, at which point commandchain is executed. commandchain
+    is a single or list of functions or registered commands.
+    """
     globs = ensure_list(globpatterns)
+    commands = ensure_list(commandchain)
     commands = _get_callables(commands)
-    # @@@ get actual command objects or ensure string list
     watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
     watchman.start()
     __join_list__.append(watchman)
+
+
+def shell(command):
+    """
+    does not support async right now!
+    """
+    proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+    stdout, stderr = proc.communicate()
+    exit = proc.returncode
+    return (exit, stdout, stderr)
 
 
 def _wait():

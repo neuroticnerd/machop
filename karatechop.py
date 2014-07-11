@@ -22,9 +22,17 @@ def python_lint(cmdpath, **kwargs):
     machop.flake(cmdpath)
 
 
+def python_test(cmdpath, **kwargs):
+    log = machop.getlog('py.test')
+    result = machop.shell(['py.test'])
+    log.out('testing %s\n' % (log.yellow + cmdpath + log.reset) + result[1])
+
+
 def foresight(**kwargs):
-    machop.watch('*.py', ['flake'])
+    machop.watch('*.py', ['flake', 'pytest'])
+
 
 machop.command('flake', python_lint)
+machop.command('pytest', python_test)
 machop.command('watch', foresight)
 machop.default('watch')

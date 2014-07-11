@@ -33,16 +33,16 @@ def main():
         raise SystemExit(exit_code > 0)
     # running specific commands
     if len(args) > 0:
-        log.out("\n" + ascii_machop, True)
+        log.out("\n" + ascii_machop, noformat=True)
         for command in args:
             # @@@ TODO use argparse to config params to commands
             machop.run(command, cmdpath=CWD)
         machop.api._wait()
     # running default command
     else:
-        log.out(ascii_choose_you, True)
-        log.out(ascii_machop, True)
-        log.out(txt_startup_msg, True)
+        log.out(ascii_choose_you, noformat=True)
+        log.out(ascii_machop, noformat=True)
+        log.out(txt_startup_msg, noformat=True)
         # @@@ TODO use argparse to config params to commands
         machop.run('focus-energy', cmdpath=CWD)
         machop.api._wait()

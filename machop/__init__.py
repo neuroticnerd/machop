@@ -1,5 +1,6 @@
 """
 @@@ better way to determine correct calls to colorama init()
+@@@ global hashing mechanism to determine if a command needs to be run
 @@@ make command structures into classes
 @@@ support command chain order dependencies
 @@@ concurrency for multiple async commands
@@ -32,5 +33,5 @@ machop.alias (associate command with series of commands)
 https://bitbucket.org/schettino72/doit/src/a55aa33b6807?at=default
 """
 from .version import __version__
-from .api import default, command, run, async, watch
+from .api import getlog, default, command, run, async, watch, shell
 from .linting import flake

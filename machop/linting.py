@@ -1,27 +1,42 @@
 
-from .utils import MachopLogger, ensure_list
+import subprocess as sp
 
-from subprocess import call
+from .utils import MachopLogger
 
 
-def flake(pythonfiles):
+def flake(filepath):
     """
-    pythonfiles can be a directory, file, or list/tuple of files
+    pythonfiles can be a directory or file
     TODO: collect output from flake calls
     """
-    log = MachopLogger('flake')
-    fileset = ensure_list(pythonfiles)
-    error = False
-    for f in fileset:
-        msg = "linting " + log.yellow + "%s" % f + log.reset + "..."
-        log.out(msg)
-        result = call(['flake8', f], shell=True)
-        if result != 0:
-            error = True
-        else:
-            msg = " " + log.yellow + "%s" % f + log.reset
+    log = MachopLogger('flake8')
+    errformat = log.yellow + "%(path)s " + log.reset
+    errformat += "[" + log.magenta + "%(row)s" + log.reset + "]["
+    errformat += log.magenta + "%(col)s" + log.reset + "]"
+    errformat += log.red_br + " %(code)s " + log.reset + "%(text)s"
+    cmdformat = ['--format', errformat]
+    cmd = ['flake8']
+    cmd.extend(cmdformat)
+    cmd.append(filepath)
+    proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+    stdout, stderr = proc.communicate()
+    exit = proc.returncode
+    if exit != 0 and exit != 1:
+        log.out('fatal error [%s]!' % exit)
+    elif stderr != '':
+        log.out('\n' + stderr)
+    else:
+        if stdout == '':
+            msg = log.yellow + "%s" % filepath + log.reset
             msg += ": " + log.green_br + "no flake8 errors!" + log.reset
             log.out(msg)
-        log.out("\n", noformat=True)
-    if not error:
-        pass
+        path = None
+        for line in stdout.split('\n'):
+            newpath = line[:line.find('.py')]
+            if path != newpath:
+                if line != '' and path:
+                    log.nl()
+                path = newpath
+            if line != '':
+                log.out(line)
+
