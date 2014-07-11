@@ -10,10 +10,10 @@ def flake(filepath):
     TODO: collect output from flake calls
     """
     log = MachopLogger('flake8')
-    errformat = log.yellow + "%(path)s " + log.reset
-    errformat += "[" + log.magenta + "%(row)s" + log.reset + "]["
-    errformat += log.magenta + "%(col)s" + log.reset + "]"
-    errformat += log.red_br + " %(code)s " + log.reset + "%(text)s"
+    errformat = log.yellow("%(path)s ")
+    errformat += "[" + log.magenta("%(row)s") + "]["
+    errformat += log.magenta("%(col)s") + "]"
+    errformat += log.red(" %(code)s ", True) + "%(text)s"
     cmdformat = ['--format', errformat]
     cmd = ['flake8']
     cmd.extend(cmdformat)
@@ -27,8 +27,8 @@ def flake(filepath):
         log.out('\n' + stderr)
     else:
         if stdout == '':
-            msg = log.yellow + "%s" % filepath + log.reset
-            msg += ": " + log.green_br + "no flake8 errors!" + log.reset
+            msg = log.yellow("%s" % filepath) + ": "
+            msg += log.green("no flake8 errors!", True)
             log.out(msg)
         path = None
         for line in stdout.split('\n'):
@@ -39,4 +39,3 @@ def flake(filepath):
                 path = newpath
             if line != '':
                 log.out(line)
-

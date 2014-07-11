@@ -20,31 +20,66 @@ class MachopLogger(object):
     def __init__(self, origin=None):
         self.origin = origin if origin else "none"
         self.logname = "machop"
-        self._make_colors()
-        self.logformat = self.cyan_br + "%(name)s" + self.reset
-        self.logformat += "(" + self.dim + self.magenta + "%(asctime)s"
-        self.logformat += self.reset + ")@"
-        self.logformat += self.blue_br + "%(origin)s" + self.reset + " | "
-        self.logformat += "%(message)s"
+        self.logformat = self.cyan("%(name)s", True) + "("
+        self.logformat += self.magenta("%(asctime)s") + ")@"
+        self.logformat += self.blue("%(origin)s", True) + " | %(message)s"
         self.logtime = "%Y-%m-%d %H:%M:%S"
         self.handler = None
         self._get_logger()
 
-    def _make_colors(self):
-        self.red_br = colorama.Fore.RED + colorama.Style.BRIGHT
-        self.red = colorama.Fore.RED
-        self.cyan_br = colorama.Fore.CYAN + colorama.Style.BRIGHT
-        self.cyan = colorama.Fore.CYAN
-        self.blue_br = colorama.Fore.BLUE + colorama.Style.BRIGHT
-        self.blue = colorama.Fore.BLUE
-        self.yellow_br = colorama.Fore.YELLOW + colorama.Style.BRIGHT
-        self.yellow = colorama.Fore.YELLOW
-        self.green_br = colorama.Fore.GREEN + colorama.Style.BRIGHT
-        self.green = colorama.Fore.GREEN
-        self.magenta_br = colorama.Fore.MAGENTA + colorama.Style.BRIGHT
-        self.magenta = colorama.Fore.MAGENTA
-        self.dim = colorama.Style.DIM
-        self.reset = colorama.Style.RESET_ALL
+    def red(self, text, bright=False, reset=True):
+        result = colorama.Fore.RED
+        if bright:
+            result += colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
+
+    def cyan(self, text, bright=False, reset=True):
+        result = colorama.Fore.CYAN
+        if bright:
+            result += colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
+
+    def blue(self, text, bright=False, reset=True):
+        result = colorama.Fore.BLUE
+        if bright:
+            result += colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
+
+    def yellow(self, text, bright=False, reset=True):
+        result = colorama.Fore.YELLOW
+        if bright:
+            result += colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
+
+    def green(self, text, bright=False, reset=True):
+        result = colorama.Fore.GREEN
+        if bright:
+            result += colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
+
+    def magenta(self, text, bright=False, reset=True):
+        result = colorama.Fore.MAGENTA
+        if bright:
+            result += colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
 
     def _get_logger(self):
         log = logging.getLogger(self.logname)

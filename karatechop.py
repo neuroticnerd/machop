@@ -25,7 +25,7 @@ def python_lint(cmdpath, **kwargs):
 def python_test(cmdpath, **kwargs):
     log = machop.getlog('py.test')
     result = machop.shell(['py.test'])
-    log.out('testing %s\n' % (log.yellow + cmdpath + log.reset) + result[1])
+    log.out('testing %s\n' % log.yellow(cmdpath) + result[1])
 
 
 def foresight(**kwargs):

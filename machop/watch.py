@@ -44,10 +44,10 @@ class MachopWatchCommand(MachopAsyncCommand):
 
     def announce(self):
         log = self.log
-        msg = "watching " + log.yellow + self.watchpath + log.reset
+        msg = "watching " + log.yellow(self.watchpath)
         for match in self.globs:
-            msg += " for [" + log.yellow + match + log.reset + "]"
-        msg += log.reset + "..."
+            msg += " for [" + log.yellow(match) + "]"
+        msg += "..."
         log.nl()
         log.out(msg)
 
