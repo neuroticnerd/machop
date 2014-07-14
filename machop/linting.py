@@ -1,7 +1,14 @@
 
 import subprocess as sp
 
-from .utils import MachopLogger
+from .mplog import MachopLog
+
+_flake_q = None
+
+
+def _set_flake_q(queue):
+    global _flake_q
+    _flake_q = queue
 
 
 def flake(filepath):
@@ -9,7 +16,9 @@ def flake(filepath):
     pythonfiles can be a directory or file
     TODO: collect output from flake calls
     """
-    log = MachopLogger('flake8')
+    if not _flake_q:
+        raise ValueError("log queue is not configured!")
+    log = MachopLog(_flake_q, 'flake8')
     errformat = log.yellow("%(path)s ")
     errformat += "[" + log.magenta("%(row)s") + "]["
     errformat += log.magenta("%(col)s") + "]"
@@ -27,15 +36,19 @@ def flake(filepath):
         log.out('\n' + stderr)
     else:
         if stdout == '':
-            msg = log.yellow("%s" % filepath) + ": "
-            msg += log.green("no flake8 errors!", True)
+            msg = log.green("no lint found!", True)
+            msg += log.yellow("\n %s\n" % filepath)
             log.out(msg)
-        path = None
-        for line in stdout.split('\n'):
-            newpath = line[:line.find('.py')]
-            if path != newpath:
-                if line != '' and path:
-                    log.nl()
-                path = newpath
-            if line != '':
-                log.out(line)
+        else:
+            path = None
+            output = log.red("lint found!", True)
+            for line in stdout.split('\n'):
+                newpath = line[:line.find('.py')]
+                if path != newpath:
+                    if line != '' and path:
+                        output += '\n'
+                    path = newpath
+                if line != '':
+                    output += '\n ' + line
+            output += '\n'
+            log.out(output)

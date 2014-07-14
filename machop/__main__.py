@@ -5,8 +5,11 @@ import imp
 import machop  # @@@ does this need to be done differently if not installed?
 
 from .strings import ascii_machop, ascii_fainted, ascii_choose_you
+from .strings import ascii_runaway
 from .strings import txt_startup_msg, txt_config_error
-from .utils import MachopLogger
+from .mplog import MachopLog, MachopLogDaemon
+from .linting import _set_flake_q
+from .api import _set_api_q
 
 
 def main():
@@ -19,7 +22,12 @@ def main():
     exit_code = 0
     karatechop = None
     CWD = os.getcwd()
-    log = MachopLogger(origin='core')
+    daemon = MachopLogDaemon()
+    daemon.create_queue()
+    _set_flake_q(daemon.queue)
+    _set_api_q(daemon.queue)
+    daemon.start()
+    log = MachopLog(daemon.queue, origin='main')
     try:
         meta = ('.py', 'rb', imp.PY_SOURCE)
         filepath = os.path.join(CWD, CONFIG_FILENAME)
@@ -31,20 +39,26 @@ def main():
         log.out(txt_config_error)
         exit_code = 1
         raise SystemExit(exit_code > 0)
-    # running specific commands
-    if len(args) > 0:
-        log.out("\n" + ascii_machop, noformat=True)
-        for command in args:
+    try:
+        # running specific commands
+        if len(args) > 0:
+            # log.out("\n" + ascii_machop, noformat=True)
+            for command in args:
+                # @@@ TODO use argparse to config params to commands
+                machop.run(command, cmdpath=CWD)
+            machop.api._wait()
+        # running default command
+        else:
+            log.out(ascii_choose_you, noformat=True)
+            log.out(ascii_machop, noformat=True)
+            log.out(txt_startup_msg, noformat=True)
             # @@@ TODO use argparse to config params to commands
-            machop.run(command, cmdpath=CWD)
-        machop.api._wait()
-    # running default command
-    else:
-        log.out(ascii_choose_you, noformat=True)
-        log.out(ascii_machop, noformat=True)
-        log.out(txt_startup_msg, noformat=True)
-        # @@@ TODO use argparse to config params to commands
-        machop.run('focus-energy', cmdpath=CWD)
-        machop.api._wait()
+            machop.run('focus-energy', cmdpath=CWD)
+            machop.api._wait()
+            log.out(ascii_runaway, True)
+    except Exception as e:
+        log.out(e)
         log.out(ascii_fainted, True)
+    daemon.queue.put_nowait(None)
+    daemon.join()
     raise SystemExit(exit_code > 0)

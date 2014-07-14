@@ -10,10 +10,13 @@ machop.default() creates a command or list of commands that are run when no
 arguments are given on the command line (e.g. 'machop').
 
 certain arguments are always available to commands via **kwargs or directly if
-reference in the function definition:
+referenced in the function definition:
 - cmdpath = the path or directory in the context the command is to be executed,
             by default this is the current working directory, but for watch
             events it is the file or directory which triggered the change.
+- log = a custom logging object which contains a 'out' method to send text
+        to the console. this logger uses a multiprocess Queue to achieve thread
+        and multiprocess safety.
 """
 import machop
 
@@ -22,17 +25,18 @@ def python_lint(cmdpath, **kwargs):
     machop.flake(cmdpath)
 
 
-def python_test(cmdpath, **kwargs):
-    log = machop.getlog('py.test')
-    result = machop.shell(['py.test'])
+def python_test(cmdpath, log, **kwargs):
+    return
+    # log = machop.getlog('py.test')
+    result = machop.shell(['py.test'], True)
     log.out('testing %s\n' % log.yellow(cmdpath) + result[1])
 
 
 def foresight(**kwargs):
-    machop.watch('*.py', ['flake', 'pytest'])
+    machop.watch('*.py', ['flake'])  # , 'pytest'])
 
 
 machop.command('flake', python_lint)
 machop.command('pytest', python_test)
-machop.command('watch', foresight)
+machop.command('watch', ['flake', foresight])
 machop.default('watch')

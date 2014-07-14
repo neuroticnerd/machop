@@ -2,21 +2,28 @@
 import os
 import subprocess as sp
 
-from .utils import MachopLogger, iscallable, ensure_list
+from .utils import iscallable, ensure_list
 from .async import MachopAsyncCommand
 from .watch import MachopWatchCommand
 from .strings import invalid_command
+from .mplog import MachopLog
+
+_api_q = None
 
 
-_log = MachopLogger('api')
+def _set_api_q(queue):
+    global _api_q
+    _api_q = queue
 
 
 def _leer(*args, **kwargs):
-    _log.out("no default command has been set!")
+    # _log.out("no default command has been set!")
+    pass
 
 
 def machop_init(*args, **kwargs):
-    _log.out("this will initialize a karatechop.py file in cwd")
+    # _log.out("this will initialize a karatechop.py file in cwd")
+    pass
 
 
 CURRENT_DIRECTORY = os.getcwd()
@@ -37,11 +44,6 @@ def _get_callables(cmdlist):
     return commands
 
 
-def getlog(source):
-    newlog = MachopLogger(origin=source)
-    return newlog
-
-
 def default(defaultcommands):
     command('focus-energy', defaultcommands)
 
@@ -53,8 +55,9 @@ def command(cmdstring, cmdfunction):
 
 
 def run(command, *args, **kwargs):
+    log = MachopLog(_api_q, 'run')
     if not __move_list__.get(command, None):
-        _log.out(invalid_command(command, __move_list__.keys()))
+        log.out(invalid_command(command, __move_list__.keys()))
         return
     actions = ensure_list(__move_list__[command])
     cmdpath = None
@@ -70,7 +73,7 @@ def run(command, *args, **kwargs):
             continue
         result = None
         if cmdpath:
-            result = action(cmdpath=cmdpath, *args, **kwargs)
+            result = action(cmdpath=cmdpath, log=log, *args, **kwargs)
             continue
         result = action(*args, **kwargs)
         if result:
@@ -100,21 +103,23 @@ def watch(globpatterns, commandchain):
     commands = ensure_list(commandchain)
     commands = _get_callables(commands)
     watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
+    watchman.queue = _api_q
     watchman.start()
     __join_list__.append(watchman)
 
 
-def shell(command):
+def shell(command, shell=False):
     """
     does not support async right now!
     """
-    proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+    proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=shell)
     stdout, stderr = proc.communicate()
     exit = proc.returncode
     return (exit, stdout, stderr)
 
 
 def _wait():
+    log = MachopLog(_api_q, 'main')
     try:
         while __join_list__:
             strand = __join_list__[0]
@@ -124,7 +129,7 @@ def _wait():
                 strand.cleanup()
                 __join_list__.remove(strand)
     except KeyboardInterrupt:
-        _log.out("shutting down...")
+        log.out("shutting down...")
         for strand in __join_list__:
             strand.shutdown()
             strand.join(2)

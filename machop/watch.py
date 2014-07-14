@@ -4,7 +4,8 @@ import fnmatch
 import hashlib
 
 from .async import MachopAsyncCommand
-from .utils import MachopLogger
+from .mplog import MachopLog
+from .linting import _set_flake_q
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -23,6 +24,7 @@ class MachopWatchCommand(MachopAsyncCommand):
     def __init__(self, globs=None, cmds=None, path=None):
         self.config(globs, cmds, path)
         self.log = None
+        self.queue = None
         super(MachopWatchCommand, self).__init__()
 
     def config(self, patterns, commands, watchpath):
@@ -38,7 +40,7 @@ class MachopWatchCommand(MachopAsyncCommand):
         for pattern in self.globs:
             if fnmatch.fnmatch(eventsrc, pattern):
                 for action in self.actions:
-                    action(cmdpath=eventsrc)
+                    action(cmdpath=eventsrc, log=self.log)
                 break
         self.announce()
 
@@ -48,11 +50,11 @@ class MachopWatchCommand(MachopAsyncCommand):
         for match in self.globs:
             msg += " for [" + log.yellow(match) + "]"
         msg += "..."
-        log.nl()
         log.out(msg)
 
     def run(self):
-        self.log = MachopLogger('watch')
+        self.log = MachopLog(self.queue, 'watch')
+        _set_flake_q(self.queue)
         handler = self.MachopHandler(patterns=self.globs)
         handler._watcher = self
         self.observer = Observer()
