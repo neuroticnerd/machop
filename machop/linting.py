@@ -1,24 +1,16 @@
 
-import subprocess as sp
-
 from .mplog import MachopLog
 
-_flake_q = None
+import subprocess as sp
 
 
-def _set_flake_q(queue):
-    global _flake_q
-    _flake_q = queue
-
-
-def flake(filepath):
+def flake(filepath, log=None):
     """
     pythonfiles can be a directory or file
     TODO: collect output from flake calls
     """
-    if not _flake_q:
-        raise ValueError("log queue is not configured!")
-    log = MachopLog(_flake_q, 'flake8')
+    from .api import _api_q
+    log = MachopLog(_api_q, 'flake8')
     errformat = log.yellow("%(path)s ")
     errformat += "[" + log.magenta("%(row)s") + "]["
     errformat += log.magenta("%(col)s") + "]"

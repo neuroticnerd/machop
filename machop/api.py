@@ -1,9 +1,9 @@
 
 import os
 import subprocess as sp
+import multiprocessing
 
 from .utils import iscallable, ensure_list
-from .async import MachopAsyncCommand
 from .watch import MachopWatchCommand
 from .strings import invalid_command
 from .mplog import MachopLog
@@ -82,6 +82,7 @@ def run(command, *args, **kwargs):
 
 
 def _async_wrapper(func, path, queue):
+    _set_api_q(queue)
     log = MachopLog(queue, 'async')
     func(cmdpath=path, log=log)
 
@@ -92,7 +93,6 @@ def async(commands, shell=False):
     *** if you want direct async shells use machop.shell([...], async=True)
     ***  ^ not yet supported
     """
-    import multiprocessing
     commands = _get_callables(ensure_list(commands))
     for cmd in commands:
         params = {
@@ -101,7 +101,6 @@ def async(commands, shell=False):
             'queue': _api_q,
         }
         cmdproc = multiprocessing.Process(target=_async_wrapper, kwargs=params)
-        # cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q)
         cmdproc.start()
         __join_list__.append(cmdproc)
 
@@ -125,6 +124,9 @@ def shell(command, shell=False):
     does not support async yet!
     """
     log = MachopLog(_api_q, 'shell')
+    exit = -1
+    stdout = None
+    stderr = None
     try:
         proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=shell)
         stdout, stderr = proc.communicate()
@@ -142,7 +144,10 @@ def shell(command, shell=False):
             msg += log.yellow(' '.join(command[1:]))
         msg += "\n"
         log.out(msg)
-        return (-1, None, None)
+        return (exit, stdout, stderr)
+    except KeyboardInterrupt:
+        cmd = log.yellow(command[0], True) if command else None
+        log.out("KeyboardInterrupt: %s terminated" % cmd)
     return (exit, stdout, stderr)
     # @@@ just return the spent process
 
@@ -155,11 +160,11 @@ def _command_wait():
             if strand.exitcode is None:
                 strand.join(1)
             else:
-                strand.cleanup()
                 __join_list__.remove(strand)
     except KeyboardInterrupt:
         log.out("shutting down...")
         for strand in __join_list__:
-            strand.shutdown()
+            if getattr(strand, 'shutdown', False):
+                strand.shutdown()
             strand.join(2)
             strand.terminate()

@@ -1,4 +1,5 @@
 """
+@@@ use signals or pipes to softly kill child processes
 @@@ turn color on/off at will
 @@@ better way to determine correct calls to colorama init()
 @@@ global hashing mechanism to determine if a command needs to be run

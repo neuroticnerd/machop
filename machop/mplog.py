@@ -50,7 +50,7 @@ class MPLogger(object):
         self.log_origin = origin if origin else 'none'
         self.log_format = self.cyan("%(name)s", True) + "("
         self.log_format += self.magenta("%(asctime)s") + ")@"
-        self.log_format += self.blue("%(origin)s", True) + " | %(message)s"
+        self.log_format += self.blue("%(origin)s", True) + " > %(message)s"
         self.log_time = "%Y-%m-%d %H:%M:%S"
         self.log_handler = None
 

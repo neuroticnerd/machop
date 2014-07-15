@@ -7,7 +7,6 @@ from .strings import ascii_machop, ascii_fainted, ascii_choose_you
 from .strings import ascii_runaway
 from .strings import txt_startup_msg, txt_config_error
 from .mplog import MachopLog, MachopLogDaemon
-from .linting import _set_flake_q
 from .api import _set_api_q, run, _command_wait
 
 
@@ -27,7 +26,6 @@ class MachopCLI(object):
             raise ValueError("process paths not equal!")
         self.daemon = MachopLogDaemon()
         self.daemon.create_queue()
-        _set_flake_q(self.daemon.queue)
         _set_api_q(self.daemon.queue)
         self.daemon.start()
         self.log = MachopLog(self.daemon.queue, origin='main')

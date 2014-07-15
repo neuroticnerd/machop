@@ -2,16 +2,15 @@
 import time
 import fnmatch
 import hashlib
+import multiprocessing
 
-from .async import MachopAsyncCommand
 from .mplog import MachopLog
-from .linting import _set_flake_q
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 
-class MachopWatchCommand(MachopAsyncCommand):
+class MachopWatchCommand(multiprocessing.Process):
 
     class MachopHandler(PatternMatchingEventHandler):
         """ watcher for a file system event """
@@ -22,10 +21,10 @@ class MachopWatchCommand(MachopAsyncCommand):
             self._watcher.modified(source)
 
     def __init__(self, globs=None, cmds=None, path=None):
+        super(MachopWatchCommand, self).__init__()
         self.config(globs, cmds, path)
         self.log = None
         self.queue = None
-        super(MachopWatchCommand, self).__init__(None, None, None)
 
     def config(self, patterns, commands, watchpath):
         self.globs = patterns if patterns else []
@@ -59,7 +58,6 @@ class MachopWatchCommand(MachopAsyncCommand):
 
     def run(self):
         self.log = MachopLog(self.queue, 'watch')
-        _set_flake_q(self.queue)
         handler = self.MachopHandler(patterns=self.globs)
         handler._watcher = self
         self.observer = Observer()
