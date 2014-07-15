@@ -10,15 +10,25 @@ from .mplog import MachopLog, MachopLogDaemon
 from .api import _set_api_q, run, _command_wait
 
 
+CONFIG_MODULE = 'karatechop'
+CONFIG_FILENAME = CONFIG_MODULE + '.py'
+karatechop = None
+try:
+    meta = ('.py', 'rb', imp.PY_SOURCE)
+    filepath = os.path.join(os.getcwd(), CONFIG_FILENAME)
+    with open(filepath, 'rb') as kfile:
+        cfgmod = CONFIG_MODULE
+        karatechop = imp.load_module(cfgmod, kfile, filepath, meta)
+except (ImportError, IOError):
+    pass
+
+
 class MachopCLI(object):
     """ creates and manages the CLI for machop """
-    CONFIG_MODULE = 'karatechop'
-    CONFIG_FILENAME = CONFIG_MODULE + '.py'
 
     def setup(self, path=None):
         self.args = sys.argv[1:]
         self.exitstatus = 0
-        self.karatechop = None
         self.path = path
         if not self.path:
             self.path = os.getcwd()
@@ -29,21 +39,13 @@ class MachopCLI(object):
         _set_api_q(self.daemon.queue)
         self.daemon.start()
         self.log = MachopLog(self.daemon.queue, origin='main')
-
-    def runcli(self, path=None):
-        self.setup(path)
-        try:
-            meta = ('.py', 'rb', imp.PY_SOURCE)
-            filepath = os.path.join(self.path, self.CONFIG_FILENAME)
-            with open(filepath, 'rb') as kfile:
-                cfgmod = self.CONFIG_MODULE
-                karatechop = imp.load_module(cfgmod, kfile, filepath, meta)
-                if not karatechop:
-                    raise ValueError("error accessing karatechop module")
-        except (ImportError, IOError):
+        if not karatechop:
             self.log.out(txt_config_error)
             self.exitstatus = 1
             raise SystemExit(self.exitstatus)
+
+    def runcli(self, path=None):
+        self.setup(path)
         try:
             if len(self.args) > 0:
                 # running specific commands
