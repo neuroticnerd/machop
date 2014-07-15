@@ -1,4 +1,26 @@
 import contextlib
+import imp
+import os
+
+
+def import_config(path=None):
+    """ dynamically imports 'karatechop.py' """
+    CONFIG_MODULE = 'karatechop'
+    karatechop = None
+    path = path if path else os.getcwd()
+    try:
+        meta = imp.find_module(CONFIG_MODULE, [path])
+        if meta[0]:
+            cfgfile = meta[0]
+        karatechop = imp.load_module(CONFIG_MODULE, *meta)
+    except (ImportError, IOError):
+        pass
+    finally:
+        try:
+            cfgfile.close()
+        except:
+            pass
+    return karatechop
 
 
 def unbuffered(process, streamname=None, ignoreempty=True):

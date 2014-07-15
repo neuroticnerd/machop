@@ -3,7 +3,7 @@ import os
 import subprocess as sp
 import multiprocessing
 
-from .utils import iscallable, ensure_list
+from .utils import iscallable, ensure_list, import_config
 from .watch import MachopWatchCommand
 from .strings import invalid_command
 from .mplog import MachopLog
@@ -75,16 +75,25 @@ def run(command, *args, **kwargs):
         if cmdpath:
             result = action(cmdpath=cmdpath, log=log, *args, **kwargs)
             continue
-        result = action(*args, **kwargs)
+        result = action(log=log, *args, **kwargs)
         if result:
             pass
     # @@@ raise exceptions or log for error results?
 
 
 def _async_wrapper(func, path, queue):
-    _set_api_q(queue)
     log = MachopLog(queue, 'async')
-    func(cmdpath=path, log=log)
+    try:
+        karatechop = import_config()
+        if not karatechop:
+            raise ValueError("unable to import configuration")
+        globals()['karatechop'] = karatechop
+        _set_api_q(queue)
+        func(cmdpath=path, log=log)
+    except Exception as e:
+        msg = log.red("fatal exception:")
+        msg += "\n %s" % e
+        log.out(msg)
 
 
 def async(commands, shell=False):
@@ -119,7 +128,7 @@ def watch(globpatterns, commandchain):
     __join_list__.append(watchman)
 
 
-def shell(command, shell=False):
+def shell(command, shell=True):
     """
     does not support async yet!
     """
