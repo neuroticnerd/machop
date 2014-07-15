@@ -25,7 +25,7 @@ class MachopWatchCommand(MachopAsyncCommand):
         self.config(globs, cmds, path)
         self.log = None
         self.queue = None
-        super(MachopWatchCommand, self).__init__()
+        super(MachopWatchCommand, self).__init__(None, None, None)
 
     def config(self, patterns, commands, watchpath):
         self.globs = patterns if patterns else []
@@ -33,6 +33,9 @@ class MachopWatchCommand(MachopAsyncCommand):
         self.watchpath = watchpath
         self.watching = True
         self.hashmap = {}
+
+    def set_queue(self, queue):
+        self.queue = queue
 
     def modified(self, eventsrc):
         if not self.has_changed(eventsrc):
@@ -44,12 +47,14 @@ class MachopWatchCommand(MachopAsyncCommand):
                 break
         self.announce()
 
-    def announce(self):
+    def announce(self, nl=False):
         log = self.log
         msg = "watching " + log.yellow(self.watchpath)
         for match in self.globs:
             msg += " for [" + log.yellow(match) + "]"
         msg += "..."
+        if nl:
+            msg += '\n'
         log.out(msg)
 
     def run(self):
@@ -60,7 +65,7 @@ class MachopWatchCommand(MachopAsyncCommand):
         self.observer = Observer()
         self.observer.schedule(handler, self.watchpath, recursive=True)
         self.observer.start()
-        self.announce()
+        self.announce(True)
         while self.watching:
             try:
                 time.sleep(1)

@@ -26,14 +26,13 @@ def python_lint(cmdpath, **kwargs):
 
 
 def python_test(cmdpath, log, **kwargs):
-    return
-    # log = machop.getlog('py.test')
     result = machop.shell(['py.test'], True)
-    log.out('testing %s\n' % log.yellow(cmdpath) + result[1])
+    if not result[1]:
+        log.out('testing %s...\n' % log.yellow(cmdpath) + result[1])
 
 
 def foresight(**kwargs):
-    machop.watch('*.py', ['flake'])  # , 'pytest'])
+    machop.watch('*.py', ['flake', 'pytest'])
 
 
 machop.command('flake', python_lint)

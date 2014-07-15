@@ -57,8 +57,8 @@ def main():
             machop.api._wait()
             log.out(ascii_runaway, True)
     except Exception as e:
-        log.out(e)
         log.out(ascii_fainted, True)
+        log.out(e)
     daemon.queue.put_nowait(None)
     daemon.join()
     raise SystemExit(exit_code > 0)

@@ -83,12 +83,13 @@ def run(command, *args, **kwargs):
 
 def async(commands, shell=False):
     """
-    commands must be a list of callables or registered commands
+    commands must be a list of functions or registered commands
     *** if you want async shells use machop.shell([...], async=True)
+    ***  ^ not yet supported
     """
     commands = _get_callables(ensure_list(commands))
     for cmd in commands:
-        cmdproc = MachopAsyncCommand(cmd)
+        cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q)
         cmdproc.start()
         __join_list__.append(cmdproc)
 
@@ -100,22 +101,38 @@ def watch(globpatterns, commandchain):
     is a single or list of functions or registered commands.
     """
     globs = ensure_list(globpatterns)
-    commands = ensure_list(commandchain)
-    commands = _get_callables(commands)
+    commands = _get_callables(ensure_list(commandchain))
     watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
-    watchman.queue = _api_q
+    watchman.set_queue(_api_q)
     watchman.start()
     __join_list__.append(watchman)
 
 
 def shell(command, shell=False):
     """
-    does not support async right now!
+    does not support async yet!
     """
-    proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=shell)
-    stdout, stderr = proc.communicate()
-    exit = proc.returncode
+    log = MachopLog(_api_q, 'shell')
+    try:
+        proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=shell)
+        stdout, stderr = proc.communicate()
+        exit = proc.returncode
+    except OSError as e:
+        if e.errno != 2:
+            raise
+        msg = log.red("fatal exception: OSError[%s]" % e.errno, True)
+        msg += "\n the command "
+        msg += log.yellow(command[0], True) if command else None
+        msg += " is not valid or could not be found!\n "
+        msg += log.yellow(command[0], True) if command else None
+        msg += " parameters: "
+        if len(command) > 1:
+            msg += log.yellow(' '.join(command[1:]))
+        msg += "\n"
+        log.out(msg)
+        return (-1, None, None)
     return (exit, stdout, stderr)
+    # @@@ just return the spent process
 
 
 def _wait():
