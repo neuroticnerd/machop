@@ -1,12 +1,7 @@
-
 watchdog==0.8.0
-# ================
 PyYAML==3.11
 argh==0.24.1
 pathtools==0.1.2
-# ----------------
-
 argparse==1.2.1
-
-# flake8
-# pytest
+flake8
+pytest

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # ===============================================
 # python setup.py register sdist bdist_egg upload
+# USE TWINE INSTEAD
 # ===============================================
 from setuptools import setup
 
@@ -64,6 +65,6 @@ setup(
     install_requires=REQUIRES,
     classifiers=TAGS,
     entry_points={
-        "console_scripts": ['machop = machop.__main__:main'],
+        "console_scripts": ['machop = machop.__main__:run_machop_cli'],
     },
 )

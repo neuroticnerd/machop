@@ -2,8 +2,6 @@ import colorama
 import logging
 import multiprocessing
 
-from threading import Thread
-
 colorama.init()
 
 """
@@ -143,7 +141,7 @@ class MPLogger(object):
         return result
 
 
-class MachopLogDaemon(Thread, MPLogger):
+class MachopLogDaemon(multiprocessing.Process, MPLogger):
 
     def create_queue(self):
         queue = multiprocessing.Queue()

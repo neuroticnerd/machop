@@ -135,7 +135,7 @@ def shell(command, shell=False):
     # @@@ just return the spent process
 
 
-def _wait():
+def _command_wait():
     log = MachopLog(_api_q, 'main')
     try:
         while __join_list__:
