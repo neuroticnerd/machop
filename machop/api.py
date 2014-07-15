@@ -81,6 +81,20 @@ def run(command, *args, **kwargs):
     # @@@ raise exceptions or log for error results?
 
 
+def watch(globpatterns, commandchain):
+    """
+    watch accepts glob-style pattern(s) as a list which are then monitored
+    for modifications, at which point commandchain is executed. commandchain
+    is a single or list of functions or registered commands.
+    """
+    globs = ensure_list(globpatterns)
+    commands = _get_callables(ensure_list(commandchain))
+    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
+    watchman.set_queue(_api_q)
+    watchman.start()
+    __join_list__.append(watchman)
+
+
 def _async_wrapper(func, path, queue):
     log = MachopLog(queue, 'async')
     try:
@@ -94,20 +108,6 @@ def _async_wrapper(func, path, queue):
         msg = log.red("fatal exception:")
         msg += "\n %s" % e
         log.out(msg)
-
-
-def watch(globpatterns, commandchain):
-    """
-    watch accepts glob-style pattern(s) as a list which are then monitored
-    for modifications, at which point commandchain is executed. commandchain
-    is a single or list of functions or registered commands.
-    """
-    globs = ensure_list(globpatterns)
-    commands = _get_callables(ensure_list(commandchain))
-    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
-    watchman.set_queue(_api_q)
-    watchman.start()
-    __join_list__.append(watchman)
 
 
 def async(commands, shell=False):

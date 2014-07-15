@@ -17,23 +17,29 @@ class MachopCLI(object):
         self.karatechop = import_config()
         self.args = sys.argv[1:]
         self.exitstatus = 0
-        self.path = path
-        if not self.path:
-            self.path = os.getcwd()
-        elif self.path != os.getcwd():
-            raise ValueError("process paths not equal!")
         self.daemon = MachopLogDaemon()
         self.daemon.create_queue()
         _set_api_q(self.daemon.queue)
         self.daemon.start()
         self.log = MachopLog(self.daemon.queue, origin='main')
+        self.path = path
+        if not self.path:
+            self.path = os.getcwd()
+        elif self.path != os.getcwd():
+            log.out("process paths not equal!")
+            self.exitstatus = 1
+            self.daemon.queue.put_nowait(None)
+            return True
         if not self.karatechop:
             self.log.out(txt_config_error)
             self.exitstatus = 1
-            sys.exit()
+            self.daemon.queue.put_nowait(None)
+            return True
+        return False
 
     def runcli(self, path=None):
-        self.setup(path)
+        if self.setup(path):
+            return
         try:
             if len(self.args) > 0:
                 # running specific commands
