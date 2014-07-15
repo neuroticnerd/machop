@@ -96,6 +96,20 @@ def _async_wrapper(func, path, queue):
         log.out(msg)
 
 
+def watch(globpatterns, commandchain):
+    """
+    watch accepts glob-style pattern(s) as a list which are then monitored
+    for modifications, at which point commandchain is executed. commandchain
+    is a single or list of functions or registered commands.
+    """
+    globs = ensure_list(globpatterns)
+    commands = _get_callables(ensure_list(commandchain))
+    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
+    watchman.set_queue(_api_q)
+    watchman.start()
+    __join_list__.append(watchman)
+
+
 def async(commands, shell=False):
     """
     commands must be a list of functions or registered commands
@@ -112,20 +126,6 @@ def async(commands, shell=False):
         cmdproc = multiprocessing.Process(target=_async_wrapper, kwargs=params)
         cmdproc.start()
         __join_list__.append(cmdproc)
-
-
-def watch(globpatterns, commandchain):
-    """
-    watch accepts glob-style pattern(s) as a list which are then monitored
-    for modifications, at which point commandchain is executed. commandchain
-    is a single or list of functions or registered commands.
-    """
-    globs = ensure_list(globpatterns)
-    commands = _get_callables(ensure_list(commandchain))
-    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
-    watchman.set_queue(_api_q)
-    watchman.start()
-    __join_list__.append(watchman)
 
 
 def shell(command, shell=True):
@@ -157,8 +157,13 @@ def shell(command, shell=True):
     except KeyboardInterrupt:
         cmd = log.yellow(command[0], True) if command else None
         log.out("KeyboardInterrupt: %s terminated" % cmd)
+    except Exception as e:
+        cmd = log.yellow(command[0], True) if command else None
+        msg = log.red("fatal exception: %s terminated" % cmd)
+        msg += "\n %s" % e
+        log.out(msg)
     return (exit, stdout, stderr)
-    # @@@ just return the spent process
+    # @@@ just return the spent process instead?
 
 
 def _command_wait():

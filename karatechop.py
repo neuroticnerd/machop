@@ -27,7 +27,7 @@ def python_lint(cmdpath, **kwargs):
 
 def python_test(cmdpath, log, **kwargs):
     result = machop.shell(['py.test'], True)
-    if not result[1]:
+    if not result[0]:
         log.out('testing %s...\n' % log.yellow(cmdpath) + result[1])
 
 

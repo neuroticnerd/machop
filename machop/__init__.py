@@ -1,5 +1,7 @@
 """
+@@@ correct exception handling for child processes
 @@@ use signals or pipes to softly kill child processes
+@@@ debug mode which outputs full stack traces
 @@@ turn color on/off at will
 @@@ better way to determine correct calls to colorama init()
 @@@ global hashing mechanism to determine if a command needs to be run
