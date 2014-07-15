@@ -81,15 +81,27 @@ def run(command, *args, **kwargs):
     # @@@ raise exceptions or log for error results?
 
 
+def _async_wrapper(func, path, queue):
+    log = MachopLog(queue, 'async')
+    func(cmdpath=path, log=log)
+
+
 def async(commands, shell=False):
     """
     commands must be a list of functions or registered commands
-    *** if you want async shells use machop.shell([...], async=True)
+    *** if you want direct async shells use machop.shell([...], async=True)
     ***  ^ not yet supported
     """
+    import multiprocessing
     commands = _get_callables(ensure_list(commands))
     for cmd in commands:
-        cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q)
+        params = {
+            'func': cmd,
+            'path': CURRENT_DIRECTORY,
+            'queue': _api_q,
+        }
+        cmdproc = multiprocessing.Process(target=_async_wrapper, kwargs=params)
+        # cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q)
         cmdproc.start()
         __join_list__.append(cmdproc)
 
