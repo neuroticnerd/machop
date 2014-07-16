@@ -31,6 +31,15 @@ __join_list__ = []
 __move_list__ = {'focus-energy': _leer, 'init': machop_init}
 
 
+def _get_callable(command):
+    if not iscallable(command):
+        ccmd = __move_list__.get(command, None)
+        if not ccmd:
+            raise KeyError("command %s not found" % command)
+        return ccmd
+    return command
+
+
 def _get_callables(cmdlist):
     commands = []
     for cmd in cmdlist:
@@ -104,22 +113,24 @@ def watch(globpatterns, commandchain):
     return True
 
 
-def async(commands, names=None):
+def async(commands):
     """
-    commands must be a list of functions or registered commands
+    commands must be a list of functions or registered commands, or a dict
+    where the keys are process names and the values are individual commands
+
     *** if you want direct async shells use machop.shell([...], async=True)
     ***  ^ not yet supported
     """
+    if isinstance(commands, dict):
+        for name, cmd in commands.iteritems():
+            ccmd = _get_callable(cmd)
+            cmdproc = MachopAsyncCommand(ccmd, CURRENT_DIRECTORY, _api_q, name)
+            cmdproc.start()
+            __join_list__.append(cmdproc)
+        return
     commands = _get_callables(ensure_list(commands))
-    if not names:
-        names = []
-        for cmd in commands:
-            names.append(None)
-    names = ensure_list(names)
-    if len(commands) != len(names):
-        raise ValueError("an equal number of names are required")
-    for i, cmd in enumerate(commands):
-        cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q, names[i])
+    for cmd in commands:
+        cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q)
         cmdproc.start()
         __join_list__.append(cmdproc)
 

@@ -18,7 +18,10 @@ class MachopAsyncCommand(MachopProcess):
     def run(self):
         log = MachopLog(self.queue, 'async')
         try:
-            pname = log.yellow(self.pname, True) if self.pname else "process"
+            if self.pname and self.pname != '':
+                pname = log.yellow(self.pname, True)
+            else:
+                pname = "process"
             log.out("starting %s..." % pname)
             self.command(cmdpath=self.path, log=MachopLog(self.queue, 'async'))
             log.out("%s completed\n" % pname)
