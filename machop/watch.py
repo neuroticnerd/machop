@@ -1,16 +1,15 @@
 
-import time
 import fnmatch
 import hashlib
-import multiprocessing
 
 from .mplog import MachopLog
+from .utils import MachopProcess, wait_for_interrupt
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 
-class MachopWatchCommand(multiprocessing.Process):
+class MachopWatchCommand(MachopProcess):
 
     class MachopHandler(PatternMatchingEventHandler):
         """ watcher for a file system event """
@@ -20,30 +19,34 @@ class MachopWatchCommand(multiprocessing.Process):
             source = event.src_path
             self._watcher.modified(source)
 
-    def __init__(self, globs=None, cmds=None, path=None):
+    def __init__(self, globs=None, cmds=None, path=None, queue=None):
         super(MachopWatchCommand, self).__init__()
-        self.config(globs, cmds, path)
-        self.log = None
-        self.queue = None
-
-    def config(self, patterns, commands, watchpath):
-        self.globs = patterns if patterns else []
-        self.actions = commands if commands else []
-        self.watchpath = watchpath
-        self.watching = True
+        recreate = (globs, cmds, path, queue)
+        self._safe_process(queue=queue, cfgpath=path, init=recreate)
+        self.globs = globs if globs else []
+        self.actions = cmds if cmds else []
+        self.watchpath = path
+        self.queue = queue
         self.hashmap = {}
+        self.log = None
 
     def set_queue(self, queue):
         self.queue = queue
 
     def modified(self, eventsrc):
+        """
+        @@@ needs proper event handling for actions!!!
+        """
         if not self.has_changed(eventsrc):
             return
+        matched = False
         for pattern in self.globs:
             if fnmatch.fnmatch(eventsrc, pattern):
-                for action in self.actions:
-                    action(cmdpath=eventsrc, log=self.log)
+                matched = True
                 break
+        if matched:
+            for action in self.actions:
+                action(cmdpath=eventsrc, log=MachopLog(self.queue, 'watch'))
         self.announce()
 
     def announce(self, nl=False):
@@ -58,22 +61,15 @@ class MachopWatchCommand(multiprocessing.Process):
 
     def run(self):
         self.log = MachopLog(self.queue, 'watch')
-        handler = self.MachopHandler(patterns=self.globs)
-        handler._watcher = self
+        self.handler = self.MachopHandler(patterns=self.globs)
+        self.handler._watcher = self
         self.observer = Observer()
-        self.observer.schedule(handler, self.watchpath, recursive=True)
+        self.observer.schedule(self.handler, self.watchpath, recursive=True)
         self.observer.start()
         self.announce(True)
-        while self.watching:
-            try:
-                time.sleep(1)
-            except KeyboardInterrupt:
-                break
+        wait_for_interrupt(self.observer)
         self.observer.stop()
-        self.observer.join()
-
-    def shutdown(self):
-        self.wait = False
+        self.observer.join(3)
 
     def has_changed(self, key):
         hasher = hashlib.md5()

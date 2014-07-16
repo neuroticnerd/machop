@@ -6,32 +6,27 @@ from .strings import ascii_machop, ascii_fainted, ascii_choose_you
 from .strings import ascii_runaway
 from .strings import txt_startup_msg, txt_config_error
 from .mplog import MachopLog, MachopLogDaemon
-from .api import _set_api_q, run, _command_wait
-from .utils import import_config
+from .api import run, _command_wait
+from .utils import initialize_process
 
 
 class MachopCLI(object):
     """ creates and manages the CLI for machop """
 
     def setup(self, path=None):
-        self.karatechop = import_config()
         self.args = sys.argv[1:]
         self.exitstatus = 0
+        self.path = path if path else os.getcwd()
         self.daemon = MachopLogDaemon()
         self.daemon.create_queue()
-        _set_api_q(self.daemon.queue)
+        result = initialize_process(self.path, self.daemon.queue)
         self.daemon.start()
         self.log = MachopLog(self.daemon.queue, origin='main')
-        self.path = path
-        if not self.path:
-            self.path = os.getcwd()
-        elif self.path != os.getcwd():
-            log.out("process paths not equal!")
-            self.exitstatus = 1
-            self.daemon.queue.put_nowait(None)
-            return True
-        if not self.karatechop:
-            self.log.out(txt_config_error)
+        if result:
+            errmsg = txt_config_error
+            if result != '':
+                errmsg += "\n\n" + result
+            self.log.out(errmsg)
             self.exitstatus = 1
             self.daemon.queue.put_nowait(None)
             return True
@@ -47,7 +42,7 @@ class MachopCLI(object):
                 for command in self.args:
                     # @@@ TODO use argparse to config params to commands
                     run(command, cmdpath=self.path)
-                _command_wait()
+                _command_wait(self.log)
             else:
                 # running default command
                 self.log.out(ascii_choose_you, noformat=True)
@@ -55,12 +50,15 @@ class MachopCLI(object):
                 self.log.out(txt_startup_msg, noformat=True)
                 # @@@ TODO use argparse to config params to commands
                 run('focus-energy', cmdpath=self.path)
-                _command_wait()
+                _command_wait(self.log)
                 self.log.out(ascii_runaway, True)
         except Exception:
             self.log.out(ascii_fainted, True)
+            _command_wait(self.log, kill=True)
             import traceback
-            self.log.out(traceback.format_exc())
+            errmsg = self.log.red("fatal exception", True) + " :\n"
+            errmsg += traceback.format_exc()
+            self.log.out(errmsg)
         self.daemon.queue.put_nowait(None)
-        self.daemon.join()
+        self.daemon.join(1)
         raise SystemExit(self.exitstatus)

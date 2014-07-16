@@ -1,10 +1,10 @@
 
 import os
 import subprocess as sp
-import multiprocessing
 
-from .utils import iscallable, ensure_list, import_config
+from .utils import iscallable, ensure_list
 from .watch import MachopWatchCommand
+from .async import MachopAsyncCommand
 from .strings import invalid_command
 from .mplog import MachopLog
 
@@ -72,10 +72,11 @@ def run(command, *args, **kwargs):
                 run(action, cmdpath, *args, **kwargs)
             continue
         result = None
+        cmdlog = MachopLog(_api_q, 'run')
         if cmdpath:
-            result = action(cmdpath=cmdpath, log=log, *args, **kwargs)
+            result = action(cmdpath=cmdpath, log=cmdlog, *args, **kwargs)
             continue
-        result = action(log=log, *args, **kwargs)
+        result = action(log=cmdlog, *args, **kwargs)
         if result:
             pass
     # @@@ raise exceptions or log for error results?
@@ -87,43 +88,38 @@ def watch(globpatterns, commandchain):
     for modifications, at which point commandchain is executed. commandchain
     is a single or list of functions or registered commands.
     """
+    log = MachopLog(_api_q, 'watch.launcher')
     globs = ensure_list(globpatterns)
     commands = _get_callables(ensure_list(commandchain))
-    watchman = MachopWatchCommand(globs, commands, CURRENT_DIRECTORY)
-    watchman.set_queue(_api_q)
-    watchman.start()
-    __join_list__.append(watchman)
-
-
-def _async_wrapper(func, path, queue):
-    log = MachopLog(queue, 'async')
     try:
-        karatechop = import_config()
-        if not karatechop:
-            raise ValueError("unable to import configuration")
-        globals()['karatechop'] = karatechop
-        _set_api_q(queue)
-        func(cmdpath=path, log=log)
+        cwd = CURRENT_DIRECTORY
+        watchman = MachopWatchCommand(globs, commands, cwd, _api_q)
+        watchman.start()
+        __join_list__.append(watchman)
+        return False
     except Exception as e:
-        msg = log.red("fatal exception:")
+        msg = log.red("fatal exception:", True)
         msg += "\n %s" % e
         log.out(msg)
+    return True
 
 
-def async(commands, shell=False):
+def async(commands, names=None):
     """
     commands must be a list of functions or registered commands
     *** if you want direct async shells use machop.shell([...], async=True)
     ***  ^ not yet supported
     """
     commands = _get_callables(ensure_list(commands))
-    for cmd in commands:
-        params = {
-            'func': cmd,
-            'path': CURRENT_DIRECTORY,
-            'queue': _api_q,
-        }
-        cmdproc = multiprocessing.Process(target=_async_wrapper, kwargs=params)
+    if not names:
+        names = []
+        for cmd in commands:
+            names.append(None)
+    names = ensure_list(names)
+    if len(commands) != len(names):
+        raise ValueError("an equal number of names are required")
+    for i, cmd in enumerate(commands):
+        cmdproc = MachopAsyncCommand(cmd, CURRENT_DIRECTORY, _api_q, names[i])
         cmdproc.start()
         __join_list__.append(cmdproc)
 
@@ -166,19 +162,29 @@ def shell(command, shell=True):
     # @@@ just return the spent process instead?
 
 
-def _command_wait():
-    log = MachopLog(_api_q, 'main')
+def _command_wait(log, timeout=1, killwait=2, kill=False):
+    """ waits for async processes while stopping for interrupts and exits """
+
+    def cleanup(killtimeout):
+        for strand in __join_list__:
+            # @@@ use event signal to attempt termination
+            strand.join(killtimeout)
+            strand.terminate()
+            log.out(log.red("terminated:", True) + " %s" % strand)
+
+    if kill:
+        cleanup(0)
+        return
     try:
         while __join_list__:
             strand = __join_list__[0]
-            if strand.exitcode is None:
-                strand.join(1)
+            if strand.is_alive():
+                strand.join(timeout)
             else:
                 __join_list__.remove(strand)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         log.out("shutting down...")
-        for strand in __join_list__:
-            if getattr(strand, 'shutdown', False):
-                strand.shutdown()
-            strand.join(2)
-            strand.terminate()
+        cleanup(killwait)
+    except:
+        cleanup(0)
+        raise

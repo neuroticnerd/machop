@@ -76,10 +76,14 @@ ascii_machop = fore.CYAN + style.BRIGHT + "\
 
 txt_startup_msg = "\n      *** use CTRL+C to terminate running commands ***\n"
 
-txt_config_error = "config module could not be loaded!\n\
- *** hint: have you run 'machop init' in the current directory?\n\
- *** hint: is your machop file in the current working directory?\n\
- *** hint: is your machop file named 'karatechop.py'?"
+txt_config_error = fore.RED + style.BRIGHT + "fatal exception:"
+txt_config_error += style.RESET_ALL + " karatechop.py could not be loaded!\n\n"
+txt_config_error += fore.YELLOW + style.BRIGHT + " *** hint" + style.RESET_ALL
+txt_config_error += ": have you run 'machop init' in the current directory?\n"
+txt_config_error += fore.YELLOW + style.BRIGHT + " *** hint" + style.RESET_ALL
+txt_config_error += ": is your machop file in the current directory?\n"
+txt_config_error += fore.YELLOW + style.BRIGHT + " *** hint" + style.RESET_ALL
+txt_config_error += ": is your machop file named 'karatechop.py'?"
 
 txt_machop = fore.CYAN + style.BRIGHT + "machop" + style.RESET_ALL
 

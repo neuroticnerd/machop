@@ -3,14 +3,12 @@ import logging
 import multiprocessing
 import threading
 
-colorama.init()
-
 """
 http://plumberjack.blogspot.com/2010/09/using-logging-with-multiprocessing.html
+
 def _proc_wrapper(queue, func, *args, **kwargs):
     # set default logging class or other things here
     func(*args, **kwargs)
-
 
 def logged_process(logqueue, target, args=None):
     wrapper_args = [logqueue, target]
@@ -43,14 +41,16 @@ class QueueHandler(logging.Handler):
 
 class MPLogger(object):
 
-    def _configure_log(self, origin=None):
+    def _configure_log(self, origin=None, daemon=False):
         self.log_name = 'machop'
-        if 'daemon' in origin:
+        if daemon:
             self.log_name = 'machop.daemon'
         self.log_origin = origin if origin else 'none'
-        self.log_format = self.cyan("%(name)s", True) + "("
-        self.log_format += self.magenta("%(asctime)s") + ")@"
-        self.log_format += self.blue("%(origin)s", True) + " > %(message)s"
+        self.log_format = self.cyan("%(name)s", True)
+        if False:
+            self.log_format += "(" + self.magenta("%(asctime)s") + ")"
+        self.log_format += ":" + self.blue("%(origin)s", True)
+        self.log_format += " > %(message)s"
         self.log_time = "%Y-%m-%d %H:%M:%S"
         self.log_handler = None
 
@@ -149,7 +149,7 @@ class MachopLogDaemon(threading.Thread, MPLogger):
         self.queue = queue
 
     def run(self):
-        self._configure_log('daemon')
+        self._configure_log('daemon', True)
         self._get_logger(daemon=True)
         while True:
             try:
@@ -178,6 +178,11 @@ class MachopLog(MPLogger):
         self.queue = logqueue
         self._configure_log(origin if origin else "none")
         self._get_logger(queue=self.queue)
+
+    def context(self, newcontext=None):
+        if newcontext:
+            self.log_origin = newcontext
+        return self.log_origin
 
     def out(self, message, noformat=False):
         self.log.info(message, extra={

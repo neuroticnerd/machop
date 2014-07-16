@@ -1,6 +1,10 @@
 """
+@@@ async processes use unbuffered output
 @@@ correct exception handling for child processes
-@@@ use signals or pipes to softly kill child processes
+@@@ use events to softly kill child processes & threads
+@@@ reload when karatechop.py changes
+@@@ ability to direct the output of machop (e.g. to a file)
+@@@ use MachopException for within these modules
 @@@ debug mode which outputs full stack traces
 @@@ turn color on/off at will
 @@@ better way to determine correct calls to colorama init()

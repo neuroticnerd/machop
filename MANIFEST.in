@@ -1,0 +1,4 @@
+exclude karatechop.py
+exclude dev.txt
+exclude requirements.txt
+exclude setup.cfg
