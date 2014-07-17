@@ -9,8 +9,9 @@ def flake(filepath, log=None):
     pythonfiles can be a directory or file
     TODO: collect output from flake calls
     """
-    from .api import _api_q
-    log = MachopLog(_api_q, 'flake8')
+    if not log:
+        from .api import _api_q
+        log = MachopLog(_api_q, 'flake8')
     errformat = log.yellow("%(path)s ")
     errformat += "[" + log.magenta("%(row)s") + "]["
     errformat += log.magenta("%(col)s") + "]"

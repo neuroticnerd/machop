@@ -21,10 +21,6 @@ referenced in the function definition:
 import machop
 
 
-def python_lint(cmdpath, **kwargs):
-    machop.flake(cmdpath)
-
-
 def python_test(cmdpath, log, **kwargs):
     log.context('py.test')
 
@@ -39,12 +35,19 @@ def python_test(cmdpath, log, **kwargs):
     return True if not result[0] else False
 
 
+def pingthing(log, **kwargs):
+    log.context('ping')
+    log.out('pinging %s' % log.yellow('google.com'))
+    result = machop.shell(['ping', 'google.com'], True)
+    log.nl()
+    return True if not result[0] else False
+
+
 def foresight(**kwargs):
     machop.watch('*.py', ['flake', 'pytest'])
-    machop.async({'py.test': python_test})
+    machop.async({'py.test': 'pytest', 'ping': pingthing})
 
 
-machop.command('flake', python_lint)
 machop.command('pytest', python_test)
 machop.command('watch', ['flake', foresight])
 machop.default('watch')

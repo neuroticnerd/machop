@@ -3,6 +3,7 @@
 @@@ correct exception handling for child processes
 @@@ use events to softly kill child processes & threads
 @@@ reload when karatechop.py changes
+@@@ full recursion for _get_callables to traverse command aliases
 @@@ ability to direct the output of machop (e.g. to a file)
 @@@ use MachopException for within these modules
 @@@ debug mode which outputs full stack traces

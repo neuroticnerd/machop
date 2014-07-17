@@ -6,6 +6,7 @@ from .utils import iscallable, ensure_list, unbuffered, invalid_command
 from .watch import MachopWatchCommand
 from .async import MachopAsyncCommand
 from .mplog import MachopLog
+from .linting import flake
 
 _api_q = None
 
@@ -25,9 +26,17 @@ def machop_init(*args, **kwargs):
     pass
 
 
+def python_lint(cmdpath, **kwargs):
+    flake(cmdpath)
+
+
 CURRENT_DIRECTORY = os.getcwd()
 __join_list__ = []
-__move_list__ = {'focus-energy': _leer, 'init': machop_init}
+__move_list__ = {
+    'focus-energy': _leer,
+    'init': machop_init,
+    'flake': python_lint,
+    }
 
 
 def _get_callable(command):
@@ -45,7 +54,8 @@ def _get_callables(cmdlist):
         if not iscallable(cmd):
             entry = __move_list__.get(cmd, None)
             if not entry:
-                raise KeyError("command %s not found" % cmd)
+                key = MachopLog.yellow(cmd, True)
+                raise KeyError("command %s not found" % key)
             commands.extend(_get_callables(ensure_list(entry)))
         else:
             commands.append(cmd)
@@ -120,6 +130,20 @@ def async(commands):
     if isinstance(commands, dict):
         for name, cmd in commands.iteritems():
             ccmd = _get_callable(cmd)
+            multiple = isinstance(ccmd, (list, tuple))
+            if multiple and len(ccmd) > 1:
+                cmdmap = {}
+                for i, subcmd in enumerate(ccmd):
+                    subname = None
+                    if isinstance(subcmd, (str, unicode)):
+                        subname = subcmd
+                    else:
+                        subname = "sub-%s" % i
+                    cmdmap["%s.%s.%s" % (name, cmd, subname)] = subcmd
+                async(cmdmap)
+                continue
+            elif multiple:
+                ccmd = _get_callable(ccmd[0])
             cmdproc = MachopAsyncCommand(ccmd, CURRENT_DIRECTORY, _api_q, name)
             cmdproc.start()
             __join_list__.append(cmdproc)

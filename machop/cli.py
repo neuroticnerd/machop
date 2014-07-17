@@ -56,7 +56,7 @@ class MachopCLI(object):
             self.log.out(ascii_fainted, True)
             _command_wait(self.log, kill=True)
             import traceback
-            errmsg = self.log.red("fatal exception", True) + " :\n"
+            errmsg = self.log.red("fatal exception", True) + ":\n"
             errmsg += traceback.format_exc()
             self.log.out(errmsg)
         self.daemon.queue.put_nowait(None)

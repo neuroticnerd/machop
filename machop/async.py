@@ -31,5 +31,5 @@ class MachopAsyncCommand(MachopProcess):
                 log.out(log.red("fatal error!\n", True) + tb.format_exc())
             else:
                 msg = log.red("fatal exception:", True)
-                msg += "\n %s" % e
+                msg += "\n %s: %s" % (log.red(e.__class__.__name__, True), e)
                 log.out(msg)
