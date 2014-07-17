@@ -6,6 +6,7 @@
 @@@ full recursion for _get_callables to traverse command aliases
 @@@ ability to direct the output of machop (e.g. to a file)
 @@@ use MachopException for within these modules
+@@@ manual sync by queueing shell commands to redirect actual output to console
 @@@ debug mode which outputs full stack traces
 @@@ turn color on/off at will
 @@@ allow console input while running bulk of application in another process
