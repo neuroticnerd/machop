@@ -157,7 +157,7 @@ def async(commands):
         __join_list__.append(cmdproc)
 
 
-def shell(command, realtime=None, cblog=None, shell=True):
+def shell(command, realtime=None, cblog=None, cwd=None, shell=True):
     """
     runs a shell command using subprocess.Popen
 
@@ -174,7 +174,8 @@ def shell(command, realtime=None, cblog=None, shell=True):
                     command,
                     stdout=sp.PIPE,
                     stderr=errfd,
-                    shell=shell
+                    shell=shell,
+                    cwd=cwd
                     )
                 result = ShellResult(proc)
                 if realtime is True:
@@ -197,7 +198,8 @@ def shell(command, realtime=None, cblog=None, shell=True):
                 command,
                 stdout=sp.PIPE,
                 stderr=sp.PIPE,
-                shell=shell
+                shell=shell,
+                cwd=cwd
                 )
             result = ShellResult(proc)
             result.stdout, result.stderr = proc.communicate()
