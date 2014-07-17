@@ -19,6 +19,7 @@ multiprocess application, functions which are not top-level cannot be seen
 by certain parts of the machinery and will cause exceptions.
 
 To access the machop API only a single import is needed::
+
     # example karatechop.py
     import machop
 
