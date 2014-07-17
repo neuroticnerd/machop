@@ -11,8 +11,9 @@ def invalid_command(cmdname, cmdlist=None):
     from .mplog import MachopLog as color
     msg = ""
     if cmdname is not None:
+        ylwcmd = color.yellow(cmdname, True)
         msg = color.red("fatal error:", True)
-        msg += " %s is not a registered command!\n" % color.yellow(cmdname, True)
+        msg += " %s is not a registered command!\n" % ylwcmd
     if cmdlist is not None:
         msg += " valid machop commands are:"
         for cmd in cmdlist:

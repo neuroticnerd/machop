@@ -165,9 +165,9 @@ def shell(command, realtime=None, cblog=None, cwd=None, shell=True):
     """
     log = MachopLog(_api_q, 'shell')
     result = ShellResult()
+    errlogname = 'error_log_%s' % os.getpid()
     try:
         if realtime:
-            errlogname = 'error_log_%s' % os.getpid()
             with open(errlogname, 'wb+') as errlog:
                 errfd = errlog.fileno()
                 proc = sp.Popen(
@@ -192,7 +192,6 @@ def shell(command, realtime=None, cblog=None, cwd=None, shell=True):
                             realtime(line)
                 errlog.seek(0, 0)
                 result.stderr = errlog.read()
-            os.remove(errlogname)
         else:
             proc = sp.Popen(
                 command,
@@ -225,8 +224,17 @@ def shell(command, realtime=None, cblog=None, cwd=None, shell=True):
         msg = log.red("fatal exception: %s terminated" % cmd, True)
         msg += "\n %s" % traceback.format_exc()
         log.out(msg)
+    try:
+        try:
+            if not result.stderr or result.stderr == '':
+                with open(errlogname, 'rb') as errfile:
+                    result.stderr = errfile.read()
+        except:
+            pass
+        os.remove(errlogname)
+    except:
+        pass
     return result
-    # @@@ just return the spent process instead?
 
 
 def _command_wait(log, timeout=1, killwait=2, kill=False):
