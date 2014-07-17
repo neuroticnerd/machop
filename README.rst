@@ -18,8 +18,7 @@ the command function must be top-level in karatechop.py; since machop is a
 multiprocess application, functions which are not top-level cannot be seen
 by certain parts of the machinery and will cause exceptions.
 
-To access the machop API only a single import is needed:
-
+To access the machop API only a single import is needed::
     # example karatechop.py
     import machop
 
@@ -87,7 +86,7 @@ machop API
     Commands can be a single string or callable, a list of command strings or
     callables, or a dictionary object. If commands is a dict, each key in the
     dict is the context name of the command, and its value must be a single
-    callable or command string.
+    callable or command string::
 
         # example karatechop.py
         import machop
@@ -121,7 +120,7 @@ machop API
     ``cblog`` can be set to a log object which will override the log to use if
     ``realtime`` is set to anything aside from ``None``. If cblog is used in
     conjunction with ``realtime`` then the callback function must also accept a
-    second parameter which will be this log!::
+    second parameter which will be this log::
 
         def python_test(cmdpath, log, **kwargs):
             # since the line handler is defined within the scope of this
@@ -168,7 +167,7 @@ The ``log`` parameter has three core methods available to the commands:
     to the console, and noformat determines whether that output should be
     prefaced by contextual information. The contextual information may not be
     useful for many writes of small lines, but if it is, consider aggregating
-    the lines into a single larger ``out`` call.::
+    the lines into a single larger ``out`` call::
 
         # example
 
@@ -186,7 +185,7 @@ The ``log`` parameter has three core methods available to the commands:
     If ``newcontext`` is supplied, then it will change the formatting context of
     calls to that logging object, and regardless will return the current
     context of that logging object. If ``newcontext`` was supplied, it will
-    return the **previous** context.::
+    return the **previous** context::
 
         log.out("application is running a command!")
         # >> machop:command > application is running a command!
