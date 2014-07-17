@@ -12,6 +12,8 @@ def flake(filepath, log=None):
     if not log:
         from .api import _api_q
         log = MachopLog(_api_q, 'flake8')
+    else:
+        log.context('flake8')
     errformat = log.yellow("%(path)s ")
     errformat += "[" + log.magenta("%(row)s") + "]["
     errformat += log.magenta("%(col)s") + "]"

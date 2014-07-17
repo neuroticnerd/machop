@@ -9,12 +9,15 @@ import contextlib
 
 def invalid_command(cmdname, cmdlist=None):
     from .mplog import MachopLog as color
-    msg = color.red("fatal error:", True)
-    msg += " %s is not a registered command!" % color.yellow(cmdname, True)
+    msg = ""
+    if cmdname is not None:
+        msg = color.red("fatal error:", True)
+        msg += " %s is not a registered command!\n" % color.yellow(cmdname, True)
     if cmdlist is not None:
-        msg += "\n valid commands are:"
+        msg += " valid machop commands are:"
         for cmd in cmdlist:
-            msg += "\n - %s" % color.yellow(cmd, True)
+            if cmd != 'focus-energy':
+                msg += "\n - %s" % color.yellow(cmd, True)
     return msg
 
 

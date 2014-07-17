@@ -17,26 +17,27 @@ def _set_api_q(queue):
     _api_q = queue
 
 
-def _leer(*args, **kwargs):
-    # _log.out("no default command has been set!")
+def _leer(log, **kwargs):
+    msg = "no default command has been set!\n\n"
+    msg += invalid_command(None, __move_list__.keys())
+    log.out(msg)
     pass
 
 
-def machop_init(*args, **kwargs):
-    # _log.out("this will initialize a karatechop.py file in cwd")
-    pass
+def _machop_init(**kwargs):
+    raise NotImplementedError("init not yet implemented!")
 
 
-def python_lint(cmdpath, **kwargs):
-    flake(cmdpath)
+def _python_lint(cmdpath, log, **kwargs):
+    flake(cmdpath, log)
 
 
 CURRENT_DIRECTORY = os.getcwd()
 __join_list__ = []
 __move_list__ = {
     'focus-energy': _leer,
-    'init': machop_init,
-    'flake': python_lint,
+    'init': _machop_init,
+    'flake': _python_lint,
     }
 
 

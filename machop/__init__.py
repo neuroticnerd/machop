@@ -8,11 +8,14 @@
 @@@ use MachopException for within these modules
 @@@ debug mode which outputs full stack traces
 @@@ turn color on/off at will
+@@@ allow console input while running bulk of application in another process
 @@@ better way to determine correct calls to colorama init()
 @@@ global hashing mechanism to determine if a command needs to be run
 @@@ make command structures into classes
 @@@ support command chain order dependencies
 @@@ concurrency for multiple async commands
+@@@ --path argument to manually set the current directory
+@@@ --karatechop argument to manually specify the location of config
 @@@ alternative way of defining built-in commands
 @@@ proper error + exception handling for commands and processes
 @@@ use logging queue for multiprocess logging
