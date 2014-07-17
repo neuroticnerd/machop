@@ -34,12 +34,14 @@ To access the machop API only a single import is needed:
     >> machop:example.command > I'm a command, yay!
     """
 
-Certain arguments are always available to commands via **kwargs or directly if
-referenced in the function definition:
+Certain arguments are always available to commands via ``**kwargs`` or directly
+if referenced in the function definition:
+
 ``cmdpath``
     The path representing the context in which the command is executed;
     by default this is the current working directory, but for watch
     events it is the file or directory which triggered the event.
+
 ``log``
     A logging object which can be used to write text to the console. **Please**
     do **not** use ``print`` statements if you value your console output
@@ -143,12 +145,15 @@ machop API
     ``class ShellResult(object)``
 
         ``proc``: The actual process object as returned by subprocess.Popen
+        
         ``stdout``: The stdout data for the process. If no realtime logging was
         performed then this will contain the output of the shell process. If
         realtime logging was done, then it will likely be empty.
+        
         ``stderr``: This contains stderr output for the process and is only
         available after the process ends or fails. Note that some applications
         just print stderr information to stdout.
+        
         ``exit``: This is a shortcut for accessing the return code for the
         shell process, which can also be accessed through ``obj.proc.returncode``
 
@@ -157,6 +162,7 @@ log parameter
 -------------
 
 The ``log`` parameter has three core methods available to the commands:
+
 ``out(message, noformat=False)``
     This is fairly self-explanatory, ``message`` is what you would like written
     to the console, and noformat determines whether that output should be
@@ -198,11 +204,19 @@ formatting and additionally depends on how the given tool was coded.
 its on my todo list!*
 
 ``red(text, bright=False, reset=True)``
+
 ``cyan(text, bright=False, reset=True)``
+
 ``blue(text, bright=False, reset=True)``
+
 ``yellow(text, bright=False, reset=True)``
+
 ``green(text, bright=False, reset=True)``
+
 ``magenta(text, bright=False, reset=True)``
+    
     ``text``: simply the string you want encased in ANSI escapes
+    
     ``bright``: use True if you desire bright text for that color
+    
     ``reset``: use False to forego resetting ANSI formatting
