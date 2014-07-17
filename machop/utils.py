@@ -4,8 +4,7 @@ import os
 import sys
 import multiprocessing
 import colorama
-
-from contextlib import closing as cclosing
+import contextlib
 
 
 def invalid_command(cmdname, cmdlist=None):
@@ -36,42 +35,20 @@ def wait_for_interrupt(parallel, timeout=1, reraise=False):
     return parallel
 
 
-def unbuffered(process, ignoreempty=True, strip=False):
+def unbuffered(process, ignoreempty=True, strip=False, stream=None):
     """
     http://stackoverflow.com/questions/803265/
         getting-realtime-output-using-subprocess
 
     *** only works for stdout and stderr as PIPEs currently
-    *** does not look for '\r' because screw old macs
+    *** does not recognize '\r' newlines because screw old macs
     """
     newlines = ['\n', '\r\n']
-    procout = getattr(process, 'stdout')
-    procerr = getattr(process, 'stderr')
-    with cclosing(procout) as stdout, cclosing(procerr) as stderr:
+    stream = getattr(process, stream if stream else 'stdout')
+    with contextlib.closing(stream):
         while True:
             out = []
-            stream = None
-            streamname = None
-            laststderr = stderr.read(1)
-            laststdout = stdout.read(1)
-            last = None
-            while True:
-                if laststderr != '':
-                    stream = stderr
-                    streamname = 'stderr'
-                    last = laststderr
-                    break
-                elif laststdout != '':
-                    stream = stdout
-                    streamname = 'stdout'
-                    last = laststdout
-                    break
-                if process.poll() is not None:
-                    if laststderr == '' and laststdout == '':
-                        last = ''
-                        break
-                laststderr = stderr.read(1)
-                laststdout = stdout.read(1)
+            last = stream.read(1)
             if last == '' and process.poll() is not None:
                 break
             while last not in newlines:
@@ -84,7 +61,7 @@ def unbuffered(process, ignoreempty=True, strip=False):
                 out = out.strip()
             if out == '' and ignoreempty:
                 continue
-            yield (out, streamname)
+            yield out
 
 
 def iscallable(obj):
@@ -204,3 +181,14 @@ class MachopProcess(multiprocessing.Process):
             ((PickleHolder(initialize_process, *cfgargs), objcopy), -1)
             )
         return tpl
+
+
+class ShellResult(object):
+    def __init__(self, process=None, stdout=None, stderr=None):
+        self.proc = process
+        self.stdout = stdout
+        self.stderr = stderr
+
+    @property
+    def exit(self):
+        return self.proc.returncode

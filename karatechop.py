@@ -21,26 +21,26 @@ referenced in the function definition:
 import machop
 
 
+def rthandler(line, log):
+    log.out(line, False)
+
+
 def python_test(cmdpath, log, **kwargs):
     log.context('py.test')
-
-    def linehandler(line, stream):
-        if line == '':
-            log.out("EMPTYLINE")
-        log.out(line, True)
-
     log.out('testing %s...' % log.yellow(cmdpath))
-    result = machop.shell(['py.test'], realtime=linehandler)
+    res = machop.shell(['py.test', '--cov'], realtime=rthandler, cblog=log)
+    if res.exit:
+        log.out(log.red("process error", True) + ":\n" + res.stderr.strip())
     log.nl()
-    return True if not result[0] else False
+    return True if not res.exit else False
 
 
 def pingthing(log, **kwargs):
     log.context('ping')
     log.out('pinging %s' % log.yellow('google.com'))
-    result = machop.shell(['ping', 'google.com'], True)
+    res = machop.shell(['ping', 'google.com'], realtime=rthandler, cblog=log)
     log.nl()
-    return True if not result[0] else False
+    return True if not res.exit else False
 
 
 def foresight(**kwargs):

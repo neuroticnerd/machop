@@ -3,6 +3,7 @@ import os
 import subprocess as sp
 
 from .utils import iscallable, ensure_list, unbuffered, invalid_command
+from .utils import ShellResult
 from .watch import MachopWatchCommand
 from .async import MachopAsyncCommand
 from .mplog import MachopLog
@@ -155,23 +156,50 @@ def async(commands):
         __join_list__.append(cmdproc)
 
 
-def shell(command, realtime=None, shell=True):
-    """ runs a shell command using subprocess.Popen """
+def shell(command, realtime=None, cblog=None, shell=True):
+    """
+    runs a shell command using subprocess.Popen
+
+    @@@ needs to have a better logfile identifier
+    """
     log = MachopLog(_api_q, 'shell')
-    exit = -1
-    stdout = None
-    stderr = None
+    result = ShellResult()
     try:
-        proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=shell)
-        if realtime is True:
-            for line, stream in unbuffered(proc, True):
-                log.out(line)
-        elif realtime:
-            for line, stream in unbuffered(proc, True):
-                realtime(line, stream)
+        if realtime:
+            errlogname = 'error_log_%s' % os.getpid()
+            with open(errlogname, 'wb+') as errlog:
+                errfd = errlog.fileno()
+                proc = sp.Popen(
+                    command,
+                    stdout=sp.PIPE,
+                    stderr=errfd,
+                    shell=shell
+                    )
+                result = ShellResult(proc)
+                if realtime is True:
+                    for line in unbuffered(proc):
+                        if cblog:
+                            cblog.out(line)
+                        else:
+                            log.out(line)
+                else:
+                    for line in unbuffered(proc):
+                        if cblog:
+                            realtime(line, cblog)
+                        else:
+                            realtime(line)
+                errlog.seek(0, 0)
+                result.stderr = errlog.read()
+            os.remove(errlogname)
         else:
-            stdout, stderr = proc.communicate()
-        exit = proc.returncode
+            proc = sp.Popen(
+                command,
+                stdout=sp.PIPE,
+                stderr=sp.PIPE,
+                shell=shell
+                )
+            result = ShellResult(proc)
+            result.stdout, result.stderr = proc.communicate()
     except OSError as e:
         if e.errno != 2:
             raise
@@ -185,7 +213,6 @@ def shell(command, realtime=None, shell=True):
             msg += log.yellow(' '.join(command[1:]))
         msg += "\n"
         log.out(msg)
-        return (exit, stdout, stderr)
     except KeyboardInterrupt:
         cmd = log.yellow(command[0], True) if command else None
         log.out("KeyboardInterrupt: %s terminated" % cmd)
@@ -195,7 +222,7 @@ def shell(command, realtime=None, shell=True):
         msg = log.red("fatal exception: %s terminated" % cmd, True)
         msg += "\n %s" % traceback.format_exc()
         log.out(msg)
-    return (exit, stdout, stderr)
+    return result
     # @@@ just return the spent process instead?
 
 
