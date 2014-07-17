@@ -26,13 +26,22 @@ def python_lint(cmdpath, **kwargs):
 
 
 def python_test(cmdpath, log, **kwargs):
-    result = machop.shell(['py.test'], True)
-    if not result[0]:
-        log.out('testing %s...\n' % log.yellow(cmdpath) + result[1])
+    log.context('py.test')
+
+    def linehandler(line, stream):
+        if line == '':
+            log.out("EMPTYLINE")
+        log.out(line, True)
+
+    log.out('testing %s...' % log.yellow(cmdpath))
+    result = machop.shell(['py.test'], realtime=linehandler)
+    log.nl()
+    return True if not result[0] else False
 
 
 def foresight(**kwargs):
     machop.watch('*.py', ['flake', 'pytest'])
+    machop.async({'py.test': python_test})
 
 
 machop.command('flake', python_lint)

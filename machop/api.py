@@ -2,10 +2,9 @@
 import os
 import subprocess as sp
 
-from .utils import iscallable, ensure_list
+from .utils import iscallable, ensure_list, unbuffered, invalid_command
 from .watch import MachopWatchCommand
 from .async import MachopAsyncCommand
-from .strings import invalid_command
 from .mplog import MachopLog
 
 _api_q = None
@@ -117,9 +116,6 @@ def async(commands):
     """
     commands must be a list of functions or registered commands, or a dict
     where the keys are process names and the values are individual commands
-
-    *** if you want direct async shells use machop.shell([...], async=True)
-    ***  ^ not yet supported
     """
     if isinstance(commands, dict):
         for name, cmd in commands.iteritems():
@@ -135,17 +131,22 @@ def async(commands):
         __join_list__.append(cmdproc)
 
 
-def shell(command, shell=True):
-    """
-    does not support async yet!
-    """
+def shell(command, realtime=None, shell=True):
+    """ runs a shell command using subprocess.Popen """
     log = MachopLog(_api_q, 'shell')
     exit = -1
     stdout = None
     stderr = None
     try:
         proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE, shell=shell)
-        stdout, stderr = proc.communicate()
+        if realtime is True:
+            for line, stream in unbuffered(proc, True):
+                log.out(line)
+        elif realtime:
+            for line, stream in unbuffered(proc, True):
+                realtime(line, stream)
+        else:
+            stdout, stderr = proc.communicate()
         exit = proc.returncode
     except OSError as e:
         if e.errno != 2:
@@ -165,9 +166,10 @@ def shell(command, shell=True):
         cmd = log.yellow(command[0], True) if command else None
         log.out("KeyboardInterrupt: %s terminated" % cmd)
     except Exception as e:
+        import traceback
         cmd = log.yellow(command[0], True) if command else None
-        msg = log.red("fatal exception: %s terminated" % cmd)
-        msg += "\n %s" % e
+        msg = log.red("fatal exception: %s terminated" % cmd, True)
+        msg += "\n %s" % traceback.format_exc()
         log.out(msg)
     return (exit, stdout, stderr)
     # @@@ just return the spent process instead?

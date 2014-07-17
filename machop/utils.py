@@ -1,9 +1,22 @@
-import contextlib
+
 import imp
 import os
 import sys
 import multiprocessing
 import colorama
+
+from contextlib import closing as cclosing
+
+
+def invalid_command(cmdname, cmdlist=None):
+    from .mplog import MachopLog as color
+    msg = color.red("fatal error:", True)
+    msg += " %s is not a registered command!" % color.yellow(cmdname, True)
+    if cmdlist is not None:
+        msg += "\n valid commands are:"
+        for cmd in cmdlist:
+            msg += "\n - %s" % color.yellow(cmd, True)
+    return msg
 
 
 def wait_for_interrupt(parallel, timeout=1, reraise=False):
@@ -23,18 +36,42 @@ def wait_for_interrupt(parallel, timeout=1, reraise=False):
     return parallel
 
 
-def unbuffered(process, streamname=None, ignoreempty=True):
+def unbuffered(process, ignoreempty=True, strip=False):
     """
     http://stackoverflow.com/questions/803265/
         getting-realtime-output-using-subprocess
+
+    *** only works for stdout and stderr as PIPEs currently
+    *** does not look for '\r' because screw old macs
     """
-    streamname = streamname if streamname else 'stdout'
-    stream = getattr(process, streamname)
-    newlines = ['\n', '\r\n', '\r']
-    with contextlib.closing(stream):
+    newlines = ['\n', '\r\n']
+    procout = getattr(process, 'stdout')
+    procerr = getattr(process, 'stderr')
+    with cclosing(procout) as stdout, cclosing(procerr) as stderr:
         while True:
             out = []
-            last = stream.read(1)
+            stream = None
+            streamname = None
+            laststderr = stderr.read(1)
+            laststdout = stdout.read(1)
+            last = None
+            while True:
+                if laststderr != '':
+                    stream = stderr
+                    streamname = 'stderr'
+                    last = laststderr
+                    break
+                elif laststdout != '':
+                    stream = stdout
+                    streamname = 'stdout'
+                    last = laststdout
+                    break
+                if process.poll() is not None:
+                    if laststderr == '' and laststdout == '':
+                        last = ''
+                        break
+                laststderr = stderr.read(1)
+                laststdout = stdout.read(1)
             if last == '' and process.poll() is not None:
                 break
             while last not in newlines:
@@ -43,11 +80,11 @@ def unbuffered(process, streamname=None, ignoreempty=True):
                 out.append(last)
                 last = stream.read(1)
             out = ''.join(out)
-            if len(out) > 0 and out[-1] in newlines:
-                out = out[:-1]
+            if strip:
+                out = out.strip()
             if out == '' and ignoreempty:
                 continue
-            yield out
+            yield (out, streamname)
 
 
 def iscallable(obj):

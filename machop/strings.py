@@ -86,10 +86,3 @@ txt_config_error += fore.YELLOW + style.BRIGHT + " *** hint" + style.RESET_ALL
 txt_config_error += ": is your machop file named 'karatechop.py'?"
 
 txt_machop = fore.CYAN + style.BRIGHT + "machop" + style.RESET_ALL
-
-
-def invalid_command(cmdname, cmdlist=None):
-    msg = "%s is not a registered command!" % cmdname
-    if cmdlist is not None:
-        msg += "\nvalid commands are: %s" % cmdlist
-    return msg

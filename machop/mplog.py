@@ -191,4 +191,4 @@ class MachopLog(MPLogger):
             })
 
     def nl(self):
-        self.out('\n', noformat=True)
+        self.out('', noformat=True)
