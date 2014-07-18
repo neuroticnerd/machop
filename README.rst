@@ -31,7 +31,7 @@ To access the machop API only a single import is needed::
 
     """
     user$ machop example
-    >> machop:example.command > I'm a command, yay!
+    >> machop|example.command $ I'm a command, yay!
     """
 
 Certain arguments are always available to commands via ``**kwargs`` or directly
@@ -173,7 +173,7 @@ The ``log`` parameter has three core methods available to the commands:
         # example
 
         log.out("application is running a command!")
-        # >> machop:command > application is running a command!
+        # >> machop|command $ application is running a command!
 
         log.out("application is running a command!", True)
         # >> application is running a command!
@@ -182,18 +182,18 @@ The ``log`` parameter has three core methods available to the commands:
     This is simply a shortcut for outputing a newline to the console and
     inherently uses ``noformat=True`` to avoid empty formatted lines.
 
-``context(newcontext=None)``
-    If ``newcontext`` is supplied, then it will change the formatting context of
+``context(context=None)``
+    If ``context`` is supplied, then it will change the formatting context of
     calls to that logging object, and regardless will return the current
-    context of that logging object. If ``newcontext`` was supplied, it will
+    context of that logging object. If ``context`` was supplied, it will
     return the **previous** context::
 
         log.out("application is running a command!")
-        # >> machop:command > application is running a command!
+        # >> machop|command $ application is running a command!
 
         oldcontext = log.context("new-context")
         log.out(oldcontext)
-        # >> machop:new-context > command
+        # >> machop|new-context $ command
 
 The logging object also has some built-in class methods for wrapping text in
 ANSI formatting for colored output to the terminal. colorama is used to ensure

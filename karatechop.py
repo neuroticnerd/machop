@@ -1,15 +1,25 @@
 
 import machop
+import os
 
 
-def rthandler(line, log):
-    log.out(line, False)
+def line_handler(line, log):
+    if line.name == 'stderr':
+        output = log.red(line.name, False) + " > "
+    elif line.name == 'stdout':
+        output = log.green(line.name, False) + " > "
+    else:
+        output = line.name + " > "
+    output += line.line
+    log.out(output, noformat=True)
 
 
 def python_test(cmdpath, log, **kwargs):
     log.context('py.test')
     log.out('testing %s...' % log.yellow(cmdpath))
-    res = machop.shell(['py.test', '--cov'], realtime=rthandler, cblog=log)
+    res = machop.shell(
+        ['py.test', '--cov', os.path.dirname(cmdpath)],
+        rthandler=line_handler, rtlog=log)
     if res.exit:
         log.out(log.red("process error", True) + ":\n" + res.stderr.strip())
     log.nl()
@@ -19,7 +29,8 @@ def python_test(cmdpath, log, **kwargs):
 def pingthing(log, **kwargs):
     log.context('ping')
     log.out('pinging %s' % log.yellow('google.com'))
-    res = machop.shell(['ping', 'google.com'], realtime=rthandler, cblog=log)
+    res = machop.shell(
+        ['ping', 'google.com'], rthandler=line_handler, rtlog=log)
     log.nl()
     return True if not res.exit else False
 

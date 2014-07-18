@@ -1,4 +1,5 @@
 """
+@@@ allow additional importing within karatechop.py of other files
 @@@ async processes use unbuffered output
 @@@ correct exception handling for child processes
 @@@ use events to softly kill child processes & threads

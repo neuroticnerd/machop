@@ -46,12 +46,18 @@ class MPLogger(object):
         if daemon:
             self.log_name = 'machop.daemon'
         self.log_origin = origin if origin else 'none'
-        self.log_format = self.cyan("%(name)s", True)
-        if False:
-            self.log_format += "(" + self.magenta("%(asctime)s") + ")"
-        self.log_format += ":" + self.blue("%(origin)s", True)
-        self.log_format += " > %(message)s"
-        self.log_time = "%Y-%m-%d %H:%M:%S"
+        self.log_prefix = ''
+        self.log_format = self.log_prefix
+        if getattr(self, 'log_time', False) is True:
+            self.log_format += "[" + self.magenta("%(asctime)s") + "] "
+        self.log_format += self.cyan("%(name)s", True)
+        self.log_format += self.bright("") + "|"
+        self.log_format += self.cyan("%(origin)s", False)
+        self.log_format += " %s " % self.blue("$", True)
+        self.log_format += "%(message)s"
+        self.log_time = "%H:%M:%S"
+        if getattr(self, 'log_date', False) is True:
+            self.log_time = "%Y-%m-%d %s" % self.log_time
         self.log_handler = None
 
     def _get_logger(self, queue=None, daemon=False):
@@ -80,6 +86,14 @@ class MPLogger(object):
         else:
             self.log_handler = log.handlers[0]
         self.log = log
+
+    @classmethod
+    def bright(cls, text, reset=True):
+        result = colorama.Style.BRIGHT
+        result += text
+        if reset:
+            result += colorama.Style.RESET_ALL
+        return result
 
     @classmethod
     def red(cls, text, bright=False, reset=True):
@@ -149,6 +163,7 @@ class MachopLogDaemon(threading.Thread, MPLogger):
         self.queue = queue
 
     def run(self):
+        self.log_time = True
         self._configure_log('daemon', True)
         self._get_logger(daemon=True)
         while True:
@@ -158,7 +173,8 @@ class MachopLogDaemon(threading.Thread, MPLogger):
                     break
                 noformat = getattr(record, 'noformat', False)
                 if noformat:
-                    self.log_handler.setFormatter(logging.Formatter())
+                    nfmt = self.log_prefix + "%(message)s"
+                    self.log_handler.setFormatter(logging.Formatter(nfmt))
                 self.log.handle(record)
                 if noformat:
                     fm = logging.Formatter(self.log_format, self.log_time)
@@ -179,10 +195,16 @@ class MachopLog(MPLogger):
         self._configure_log(origin if origin else "none")
         self._get_logger(queue=self.queue)
 
-    def context(self, newcontext=None):
-        if newcontext:
-            self.log_origin = newcontext
-        return self.log_origin
+    def context(self, context=None):
+        previous = self.log_origin
+        if context:
+            if previous.find("(") > 0:
+                temp = previous[:previous.find("(")]
+                self.log_origin = temp + "(%s)" % context
+            else:
+                self.log_origin = self.log_origin + "(%s)" % context
+            self.log_origin = context
+        return previous
 
     def out(self, message, noformat=False):
         self.log.info(message, extra={

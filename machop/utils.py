@@ -5,6 +5,8 @@ import sys
 import multiprocessing
 import colorama
 import contextlib
+import subprocess
+import threading
 
 
 def invalid_command(cmdname, cmdlist=None):
@@ -37,6 +39,72 @@ def wait_for_interrupt(parallel, timeout=1, reraise=False):
         if reraise:
             raise
     return parallel
+
+
+class OutputLine(object):
+    def __init__(self, streamname, line):
+        self.name = streamname
+        self.line = line
+
+
+class PopenPiped(subprocess.Popen):
+    """
+    http://stackoverflow.com/questions/375427/
+        non-blocking-read-on-a-subprocess-pipe-in-python/4896288#4896288
+    http://stefaanlippens.net/python-asynchronous-subprocess-pipe-reading
+    """
+    def __init__(self, command, stdout=None, stderr=None, **kwargs):
+        stdout = subprocess.PIPE
+        stderr = subprocess.PIPE
+        super(PopenPiped, self).__init__(
+            command, stdout=stdout, stderr=stderr, **kwargs)
+
+    def _q_unbuffered(self, process, stream, queue, ignoreempty=True):
+        streamname = stream
+        stream = getattr(process, stream)
+        newlines = ['\n', '\r\n']
+        while True:
+            out = []
+            last = stream.read(1)
+            if last == '' and self.poll() is not None:
+                break
+            while last not in newlines:
+                if last == '' and self.poll() is not None:
+                    break
+                out.append(last)
+                last = stream.read(1)
+            out = ''.join(out)
+            out = out.strip()
+            if out == '' and ignoreempty:
+                continue
+            queue.put((streamname, out))
+        queue.put(None)
+
+    def listen(self):
+        if self.poll() is not None:
+            return
+        q = multiprocessing.Queue()
+        t_out = threading.Thread(
+            target=self._q_unbuffered, args=(self, 'stdout', q))
+        t_out.daemon = True
+        t_err = threading.Thread(
+            target=self._q_unbuffered, args=(self, 'stderr', q))
+        t_err.daemon = True
+        t_out.start()
+        t_err.start()
+        running = 2
+        while running > 0:
+            try:
+                line = q.get()
+                if line is None:
+                    running = running - 1
+                    continue
+                if isinstance(line, tuple) and len(line) == 2:
+                    yield OutputLine(line[0], line[1])
+                else:
+                    raise ValueError("unexpected queue element: %s" % line)
+            except:
+                raise
 
 
 def unbuffered(process, ignoreempty=True, strip=False, stream=None):
@@ -188,7 +256,7 @@ class MachopProcess(multiprocessing.Process):
 
 
 class ShellResult(object):
-    def __init__(self, process=None, stdout=None, stderr=None):
+    def __init__(self, process, stdout=None, stderr=None):
         self.proc = process
         self.stdout = stdout
         self.stderr = stderr

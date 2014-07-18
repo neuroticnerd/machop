@@ -1,9 +1,8 @@
 
 import os
-import subprocess as sp
 
-from .utils import iscallable, ensure_list, unbuffered, invalid_command
-from .utils import ShellResult
+from .utils import iscallable, ensure_list, invalid_command
+from .utils import ShellResult, PopenPiped
 from .watch import MachopWatchCommand
 from .async import MachopAsyncCommand
 from .mplog import MachopLog
@@ -157,49 +156,43 @@ def async(commands):
         __join_list__.append(cmdproc)
 
 
-def shell(command, realtime=None, cblog=None, cwd=None, shell=True):
+def shell(command, rthandler=None, rtlog=None, shell=True, **kwargs):
     """
     runs a shell command using subprocess.Popen
 
     @@@ needs to have a better logfile identifier
     """
     log = MachopLog(_api_q, 'shell')
-    result = ShellResult()
-    errlogname = 'error_log_%s' % os.getpid()
+    result = None
+    popenparams = (
+        'args', 'bufsize', 'executable', 'stdin', 'stdout', 'stderr',
+        'preexec_fn', 'close_fds', 'shell', 'cwd', 'env', 'universal_newlines',
+        'startupinfo', 'creationflags'
+        )
+    procargs = {}
+    for arg, value in kwargs.iteritems():
+        if arg not in popenparams:
+            log.out("WARNING: %s is an unrecognized shell parameter")
+            continue
+        procargs[arg] = value
     try:
-        if realtime:
-            with open(errlogname, 'wb+') as errlog:
-                errfd = errlog.fileno()
-                proc = sp.Popen(
-                    command,
-                    stdout=sp.PIPE,
-                    stderr=errfd,
-                    shell=shell,
-                    cwd=cwd
-                    )
-                result = ShellResult(proc)
-                if realtime is True:
-                    for line in unbuffered(proc):
-                        if cblog:
-                            cblog.out(line)
-                        else:
-                            log.out(line)
-                else:
-                    for line in unbuffered(proc):
-                        if cblog:
-                            realtime(line, cblog)
-                        else:
-                            realtime(line)
-                errlog.seek(0, 0)
-                result.stderr = errlog.read()
+        if rthandler:
+            proc = PopenPiped(command, shell=shell, **procargs)
+            result = ShellResult(proc)
+            if rthandler is True:
+                for line in proc.listen():
+                    if rtlog:
+                        rtlog.out(line)
+                    else:
+                        log.out(line)
+            else:
+                for line in proc.listen():
+                    if rtlog:
+                        rthandler(line, rtlog)
+                    else:
+                        rthandler(line)
         else:
-            proc = sp.Popen(
-                command,
-                stdout=sp.PIPE,
-                stderr=sp.PIPE,
-                shell=shell,
-                cwd=cwd
-                )
+            proc = PopenPiped(command, shell=shell, **procargs)
             result = ShellResult(proc)
             result.stdout, result.stderr = proc.communicate()
     except OSError as e:
@@ -224,16 +217,6 @@ def shell(command, realtime=None, cblog=None, cwd=None, shell=True):
         msg = log.red("fatal exception: %s terminated" % cmd, True)
         msg += "\n %s" % traceback.format_exc()
         log.out(msg)
-    try:
-        try:
-            if not result.stderr or result.stderr == '':
-                with open(errlogname, 'rb') as errfile:
-                    result.stderr = errfile.read()
-        except:
-            pass
-        os.remove(errlogname)
-    except:
-        pass
     return result
 
 
