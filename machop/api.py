@@ -172,7 +172,7 @@ def shell(command, rthandler=None, rtlog=None, shell=True, **kwargs):
     procargs = {}
     for arg, value in kwargs.iteritems():
         if arg not in popenparams:
-            log.out("WARNING: %s is an unrecognized shell parameter")
+            log.out("WARNING: %s is an unrecognized shell parameter" % arg)
             continue
         procargs[arg] = value
     try:
