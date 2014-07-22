@@ -82,7 +82,7 @@ class PopenPiped(subprocess.Popen):
                 if last == '' and self.poll() is not None:
                     break
                 out.append(last)
-                if ''.join(out[-2:]).find(os.linesep) != -1:
+                if ''.join(out[-2:]).find(os.linesep) != -1 or last == '\n':
                     break
                 last = stream.read(1)
             out = ''.join(out)
