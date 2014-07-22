@@ -1,4 +1,5 @@
 """
+@@@ look into using pty or equivalent for colored child output
 @@@ allow additional importing within karatechop.py of other files
 @@@ async processes use unbuffered output
 @@@ correct exception handling for child processes

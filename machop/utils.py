@@ -41,9 +41,20 @@ def wait_for_interrupt(parallel, timeout=1, reraise=False):
     return parallel
 
 
+class ShellResult(object):
+    def __init__(self, process=None, stdout=None, stderr=None):
+        self.proc = process
+        self.stdout = stdout
+        self.stderr = stderr
+
+    @property
+    def exit(self):
+        return self.proc.returncode if self.proc is not None else None
+
+
 class OutputLine(object):
     def __init__(self, streamname, line):
-        self.name = streamname
+        self.stream = streamname
         self.line = line
 
 
@@ -253,14 +264,3 @@ class MachopProcess(multiprocessing.Process):
             ((PickleHolder(initialize_process, *cfgargs), objcopy), -1)
             )
         return tpl
-
-
-class ShellResult(object):
-    def __init__(self, process, stdout=None, stderr=None):
-        self.proc = process
-        self.stdout = stdout
-        self.stderr = stderr
-
-    @property
-    def exit(self):
-        return self.proc.returncode

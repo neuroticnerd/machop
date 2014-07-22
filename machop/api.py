@@ -163,7 +163,7 @@ def shell(command, rthandler=None, rtlog=None, shell=True, **kwargs):
     @@@ needs to have a better logfile identifier
     """
     log = MachopLog(_api_q, 'shell')
-    result = None
+    result = ShellResult()
     popenparams = (
         'args', 'bufsize', 'executable', 'stdin', 'stdout', 'stderr',
         'preexec_fn', 'close_fds', 'shell', 'cwd', 'env', 'universal_newlines',
