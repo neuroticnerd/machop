@@ -4,12 +4,13 @@ import os
 
 
 def line_handler(line, log):
+    output = log.cyan(log.context()) + "."
     if line.stream == 'stderr':
-        output = log.red(line.stream, False) + " > "
+        output += log.red(line.stream, False) + " > "
     elif line.stream == 'stdout':
-        output = log.green(line.stream, False) + " > "
+        output += log.green(line.stream, False) + " > "
     else:
-        output = line.stream + " > "
+        output += line.stream + " > "
     output += line.line
     log.out(output, noformat=True)
 

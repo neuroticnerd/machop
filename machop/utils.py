@@ -70,22 +70,23 @@ class PopenPiped(subprocess.Popen):
         super(PopenPiped, self).__init__(
             command, stdout=stdout, stderr=stderr, **kwargs)
 
-    def _q_unbuffered(self, process, stream, queue, ignoreempty=True):
+    def _q_unbuffered(self, process, stream, queue, ignoreempty=False):
         streamname = stream
         stream = getattr(process, stream)
-        newlines = ['\n', '\r\n']
         while True:
             out = []
             last = stream.read(1)
             if last == '' and self.poll() is not None:
                 break
-            while last not in newlines:
+            while True:
                 if last == '' and self.poll() is not None:
                     break
                 out.append(last)
+                if ''.join(out[-2:]).find(os.linesep) != -1:
+                    break
                 last = stream.read(1)
             out = ''.join(out)
-            out = out.strip()
+            out = out.rstrip()
             if out == '' and ignoreempty:
                 continue
             queue.put((streamname, out))
