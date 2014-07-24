@@ -27,11 +27,12 @@ def python_test(cmdpath, log, **kwargs):
     return True if not res.exit else False
 
 
-def pingthing(log, **kwargs):
+@machop.kwargs(url='www.google.com')
+def pingthing(log, url, **kwargs):
     log.context('ping')
-    log.out('pinging %s' % log.yellow('google.com'))
+    log.out('pinging %s' % log.yellow(url))
     res = machop.shell(
-        ['ping', 'google.com'], rthandler=line_handler, rtlog=log)
+        ['ping', url], rthandler=line_handler, rtlog=log)
     log.nl()
     return True if not res.exit else False
 

@@ -50,8 +50,9 @@ https://bitbucket.org/schettino72/doit/src/a55aa33b6807?at=default
 from .version import __version__
 from .api import default, command, run, async, watch, shell
 from .linting import flake
+from .utils import kwargs
 
 __all__ = [
     '__version__', 'default', 'command',
-    'run', 'async', 'watch', 'shell', 'flake'
+    'run', 'async', 'watch', 'shell', 'flake', 'kwargs'
     ]
