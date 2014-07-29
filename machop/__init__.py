@@ -1,10 +1,10 @@
 """
 @@@ look into using pty or equivalent for colored child output
 @@@ allow additional importing within karatechop.py of other files
-@@@ async processes use unbuffered output
+@@@ fix unbuffered to skip always having at least a single blank line
 @@@ correct exception handling for child processes
 @@@ use events to softly kill child processes & threads
-@@@ reload when karatechop.py changes
+@@@ reload commands when karatechop.py changes
 @@@ full recursion for _get_callables to traverse command aliases
 @@@ ability to direct the output of machop (e.g. to a file)
 @@@ use MachopException for within these modules
@@ -50,7 +50,7 @@ https://bitbucket.org/schettino72/doit/src/a55aa33b6807?at=default
 from .version import __version__
 from .api import default, command, run, async, watch, shell
 from .linting import flake
-from .utils import kwargs
+from .decorators import kwargs
 
 __all__ = [
     '__version__', 'default', 'command',
