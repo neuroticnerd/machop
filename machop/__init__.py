@@ -1,4 +1,13 @@
 """
+@@@ pipe commands into input of another
+@@@ simple support for plugins
+@@@ polling module to execute some task at a designated interval
+@@@ glob input to map command to set of files
+@@@ command queue with worker processes
+@@@ commands are classes with __call__
+@@@ allow passing arguments to commands
+@@@ daemon process to handle management while main process remains unblocked
+@@@ timestamp log entries for chronological order - multiprocess priority queue
 @@@ look into using pty or equivalent for colored child output
 @@@ allow additional importing within karatechop.py of other files
 @@@ fix unbuffered to skip always having at least a single blank line
